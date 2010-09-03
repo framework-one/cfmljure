@@ -7,8 +7,12 @@
 		return this;
 	}
 	
-	public void function load( string file ) {
-		variables.rt.loadResourceScript( file & '.clj' );
+	public void function load( string fileList ) {
+		var files = listToArray( fileList );
+		var file = 0; // CFBuilder barfs on for ( var file in files ) so declare it separately!
+		for ( file in files ) {
+			variables.rt.loadResourceScript( 'clj/' & file & '.clj' );
+		}
 	}
 	
 	public any function get( string ref ) {

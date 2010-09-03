@@ -4,6 +4,8 @@ You need to download the Clojure libraries and place them on your classpath. You
 
 Download Clojure and Clojure Contrib and unzip them. Copy **clojure.jar** (from the clojure-1.2.0.zip) and **clojure-contrib-1.2.0.jar** (from the target subfolder of clojure-contrib-1.2.0.zip) to your classpath - I put them in **{tomcat}/lib** - and restart your CFML engine.
 
+**Note: cfmljure.cfc requires Adobe ColdFusion 9 or Railo 3.1.2 BER build!**
+
 # Your Clojure Code
 
 Your Clojure code also needs to be on your classpath. cfmljure assumes there is a **clj/** folder on your class path and all your Clojure code lives in that folder. Therefore, to run the example, you need to copy the **clj/** folder (containing **examples.clj** etc) to the same place you put the JAR files.

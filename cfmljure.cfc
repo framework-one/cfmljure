@@ -21,25 +21,25 @@
 		return variables.clj[ref];
 	}
 
-	public any function def( any ref ) {
-		variables.ref = ref;
+	public any function def( any defn ) {
+		this.defn = defn;
 		return this;
 	}
 	
 	public any function call() {
 		switch ( arrayLen( arguments ) ) {
 		case 0:
-			return variables.ref.invoke();
+			return this.defn.invoke();
 		case 1:
-			return variables.ref.invoke( arguments[1] );
+			return this.defn.invoke( arguments[1] );
 		case 2:
-			return variables.ref.invoke( arguments[1], arguments[2] );
+			return this.defn.invoke( arguments[1], arguments[2] );
 		case 3:
-			return variables.ref.invoke( arguments[1], arguments[2], arguments[3] );
+			return this.defn.invoke( arguments[1], arguments[2], arguments[3] );
 		case 4:
-			return variables.ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4] );
+			return this.defn.invoke( arguments[1], arguments[2], arguments[3], arguments[4] );
 		case 5:
-			return variables.ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5] );
+			return this.defn.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5] );
 		default:
 			throw "Unsupported call();";
 		}

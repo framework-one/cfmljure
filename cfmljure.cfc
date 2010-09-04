@@ -17,16 +17,18 @@
 	
 	variables.clj = { };
 	
-	public any function init() {
+	public any function init( string project = '' ) {
+		variables.project = project;
 		variables.rt = createObject( 'java', 'clojure.lang.RT' );
 		return this;
 	}
 	
 	public void function load( string fileList ) {
+		var prefix = variables.project == '' ? '' : variables.project & '/src/';
 		var files = listToArray( fileList );
 		var file = 0; // CFBuilder barfs on for ( var file in files ) so declare it separately!
 		for ( file in files ) {
-			variables.rt.loadResourceScript( 'clj/' & file & '.clj' );
+			variables.rt.loadResourceScript( 'clj/' & prefix & file & '.clj' );
 		}
 	}
 	

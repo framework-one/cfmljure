@@ -163,7 +163,12 @@ target so all pages in the application can access the namespaces and call functi
 
 ## Original Clojure Function References
 
+You'll need this when you want to pass a Clojure function to another Clojure function,
+such as the **map()** example that passes a reference to **times2** into the call.
+
 If you have a callable reference to a Clojure function, you can get the underlying raw Clojure function object via the
-**.defn** public data member. You'll need this when you want to pass a Clojure function to another Clojure function,
-such as the **map()** example that passes a reference to **times2** into the call. _I think this is a bit ugly and I'll
-come up with a better way to do this soon I hope!_
+**.defn** public data member. 
+
+If you have a reference to a namespace, you can get an underlying Clojure function by name via the **\_()** API. Calling
+**\_( _reference_ )** is identical to calling **get( _reference_ ).defn** so this is the more convenient API when you're
+working with namespaces or an installed Clojure configuration.

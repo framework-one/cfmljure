@@ -11,12 +11,15 @@
 	function onRequestStart() {
 		if ( !structKeyExists( application, 'clj') ||
 				( structKeyExists( URL, 'reload' ) && isBoolean( URL.reload ) && URL.reload ) ) {
-			application.clj = new cfmljure();
+			application.clj = new cfmljure( config.project );
 		}
+		request.start = getTickCount();
 		application.clj.install( config, variables );
+		request.end = getTickCount();
 	}
 	
 	function onRequest( string targetPath ) {
 		include targetPath;
+		writeOutput( '<br />Time taken for install: #request.end - request.start#ms.<br />' );
 	}
 }

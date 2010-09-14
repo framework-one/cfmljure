@@ -68,7 +68,7 @@
 	writeOutput( '(times2 42) = ' & cfml.examples.times2( 42 ) & '<br />' );
 	
 	// call built-in Clojure function, passing raw definition of times2 function:
-	list = clojure.core.map( cfml.examples.get( 'times2' ).defn, [ 4, 5, 6 ] );
+	list = clojure.core.map( cfml.examples._( 'times2' ), [ 4, 5, 6 ] );
 	writeOutput( '(map times2 [ 4 5 6 ]) = ' );
 	for ( n in list ) writeOutput( n & ' ' );
 	writeOutput( '<br />' );
@@ -107,7 +107,7 @@
 	writeOutput( '(times2 42) = ' & target.cfml.examples.times2( 42 ) & '<br />' );
 	
 	// call built-in Clojure function, passing raw definition of times2 function:
-	list = target.clojure.core.map( target.cfml.examples.get( 'times2' ).defn, [ 4, 5, 6 ] );
+	list = target.clojure.core.map( target.cfml.examples._( 'times2' ), [ 4, 5, 6 ] );
 	writeOutput( '(map times2 [ 4 5 6 ]) = ' );
 	for ( n in list ) writeOutput( n & ' ' );
 	writeOutput( '<br />' );

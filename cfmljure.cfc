@@ -34,6 +34,7 @@
 	public void function load( string fileList ) {
 		// clear the reference cache if we load any files
 		variables._refCache = { };
+		variables._files = listAppend( variables._files, fileList );
 		var prefix = variables._project == '' ? '' : variables._project & '/src/';
 		var files = listToArray( fileList );
 		var file = 0; // CFBuilder barfs on for ( var file in files ) so declare it separately!
@@ -100,8 +101,12 @@
 		var fileList = structKeyExists( config, 'files' ) ? config.files : '';
 		var namespaceList = structKeyExists( config, 'ns' ) ? config.ns : '';
 		var clj = this;
-		if ( project != variables._project ) clj = new cfmljure( project, variables._rt, variables._ns );
-		clj.load( fileList );
+		if ( project != variables._project ) {
+			clj = new cfmljure( project, variables._rt, variables._ns );
+			clj.load( fileList );
+		} else if ( fileList != variables._files ) {
+			clj.load( fileList );
+		}
 		target.clj = clj;
 		var namespaces = listToArray( namespaceList );
 		var ns = 0; // CFBuilder barfs on for ( var ns in namespaces ) so declare it separately!

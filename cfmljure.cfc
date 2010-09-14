@@ -30,44 +30,7 @@
 		return this;
 	}
 	
-	// load a list of files
-	public void function load( string fileList ) {
-		// clear the reference cache if we load any files
-		variables._refCache = { };
-		variables._files = listAppend( variables._files, fileList );
-		var prefix = variables._project == '' ? '' : variables._project & '/src/';
-		var files = listToArray( fileList );
-		var file = 0; // CFBuilder barfs on for ( var file in files ) so declare it separately!
-		for ( file in files ) {
-			variables._rt.loadResourceScript( 'clj/' & prefix & trim( file ) & '.clj' );
-		}
-	}
-	
-	// get a specific Clojure function
-	public any function get( string ref ) {
-		var fqRef = listAppend( variables._ns, ref, '.' );
-		if ( !structKeyExists( variables._refCache, fqRef ) ) {
-			var fn = listLast( fqRef , '.' );
-			var ns = left( fqRef, len( fqRef ) - len( fn ) - 1 );
-			var r = variables._rt.var( ns, fn );
-			variables._refCache[ref] = new cfmljure( variables._project, variables._rt, variables._ns )._defn( r );
-		}
-		return variables._refCache[ref];
-	}
-	
-	// set up a context for a Clojure namespace
-	public any function ns( string ref ) {
-		if ( !structKeyExists( variables._nsCache, ref ) ) {
-			variables._nsCache[ref] = new cfmljure( variables._project, variables._rt, ref ); 
-		}
-		return variables._nsCache[ref];
-	}
-	
-	// tag this instance with a specific Clojure function definition so it can be called
-	public any function _defn( any defn ) {
-		this.defn = defn;
-		return this;
-	}
+	// public API
 	
 	// explicit call method with up to five positional arguments
 	public any function call() {
@@ -89,10 +52,16 @@
 		}
 	}
 	
-	// support dynamic calling of any method in the current namespace
-	public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
-		var ref = get( lCase( missingMethodName ) );
-		return ref.call( argumentCollection = missingMethodArguments );
+	// get a specific Clojure function
+	public any function get( string ref ) {
+		var fqRef = listAppend( variables._ns, ref, '.' );
+		if ( !structKeyExists( variables._refCache, fqRef ) ) {
+			var fn = listLast( fqRef , '.' );
+			var ns = left( fqRef, len( fqRef ) - len( fn ) - 1 );
+			var r = variables._rt.var( ns, fn );
+			variables._refCache[ref] = new cfmljure( variables._project, variables._rt, variables._ns )._defn( r );
+		}
+		return variables._refCache[ref];
 	}
 	
 	// install from a configuration into a target
@@ -115,6 +84,39 @@
 			var pair = _makePath( _ns, target );
 			pair.s[pair.key] = clj.ns( _ns );
 		}
+	}
+	
+	// load a list of files
+	public void function load( string fileList ) {
+		// clear the reference cache if we load any files
+		variables._refCache = { };
+		variables._files = listAppend( variables._files, fileList );
+		var prefix = variables._project == '' ? '' : variables._project & '/src/';
+		var files = listToArray( fileList );
+		var file = 0; // CFBuilder barfs on for ( var file in files ) so declare it separately!
+		for ( file in files ) {
+			variables._rt.loadResourceScript( 'clj/' & prefix & trim( file ) & '.clj' );
+		}
+	}
+	
+	// set up a context for a Clojure namespace
+	public any function ns( string ref ) {
+		if ( !structKeyExists( variables._nsCache, ref ) ) {
+			variables._nsCache[ref] = new cfmljure( variables._project, variables._rt, ref ); 
+		}
+		return variables._nsCache[ref];
+	}
+	
+	// tag this instance with a specific Clojure function definition so it can be called
+	public any function _defn( any defn ) {
+		this.defn = defn;
+		return this;
+	}
+	
+	// support dynamic calling of any method in the current namespace
+	public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
+		var ref = get( lCase( missingMethodName ) );
+		return ref.call( argumentCollection = missingMethodArguments );
 	}
 	
 	// helper for installing namespace paths

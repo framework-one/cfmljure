@@ -6,9 +6,10 @@ To use cfmljure, you need the Clojure libraries. I think the easiest way to do t
 
 ## Installation with Leiningen
 
-Copy the **clj/** folder from the cfmljure project to your server's classpath. Install the
-**lein** script from http://github.com/technomancy/leiningen (download the **lein** script, make
-it executable, run **lein self-install** to complete the installation).
+Copy the **clj/** folder from the cfmljure project to your server's classpath (or create a 
+symbolic link). Install the **lein** script from http://github.com/technomancy/leiningen 
+(download the **lein** script, make it executable, run **lein self-install** to complete 
+the installation).
 
 Run the **cfmljure** tests:
 
@@ -37,8 +38,8 @@ Download both Clojure and Clojure Contrib and unzip them. Copy **clojure.jar** (
 and **clojure-contrib-1.2.0.jar** (from the target subfolder of clojure-contrib-1.2.0.zip) to your classpath.
 I put them in **{tomcat}/lib** - and restart your CFML engine. You can ignore the rest of those ZIP files.
 
-Copy the **clj/** folder from the cfmljure project to your server's classpath. Now go hit the cfmljure **index.cfm**
-file in your browser!
+Copy the **clj/** folder from the cfmljure project to your server's classpath (or create a symbolic link).
+Now go hit the cfmljure **index.cfm** file in your browser!
 
 # Your Clojure Code
 
@@ -52,7 +53,15 @@ not using Leiningen, you can organize your files however you want but I think yo
 
 The API is pretty simple but there are some things about Clojure code organization which you might find non-intuitive.
 
-## Loading the Clojure runtime (RT)
+## Basic (Low-Level) Usage
+
+There are two examples supplied with **cfmljure**: a basic example which uses the low-level APIs to show how you can
+work with Clojure inside a single page or component as an isolated usage. The APIs used in that example is explored
+first so that you understand some of the *basics* of Clojure projects, files, namespaces and functions.
+
+The advanced / automated example is explored below.
+
+### Loading the Clojure runtime (RT)
 
 The first thing you need to do is create an instance of **cfmljure.cfc** which loads the Clojure runtime system. If
 you're working with Leiningen, tell cfmljure which project to load from:
@@ -61,7 +70,7 @@ you're working with Leiningen, tell cfmljure which project to load from:
 
 Otherwise, omit the project argument and cfmljure will load files by their relative path.
 
-## Clojure Script Files
+### Clojure Script Files
 
 First off, the filename is unrelated to the contents of the file. So in the **cfml/** project folder, under the
 **src/cfml/** folder, we have **examples.clj** and it declares that it's contents live in the **cfml.examples**
@@ -79,9 +88,9 @@ if you specified a project, **clj/main.clj**, **clj/account/info.clj** and **clj
 
 This makes it easy to work with Leiningen projects as well as ad hoc code organization.
 
-## Clojure Functions
+### Clojure Functions
 
-Once your scripts are loaded, you can get references to them by calling the **get()** method which takes a string
+Once your scripts are loaded, you can get direct references to them by calling the **get()** method which takes a string
 specifying the namespace qualified name of the function. In the example **index.cfm**, you'll see:
 
 	greet = clj.get( 'cfml.examples.greet' );
@@ -90,7 +99,36 @@ specifying the namespace qualified name of the function. In the example **index.
 The first line gets a reference to the **greet** function from the **cfml.examples** namespace.
 The second line gets a reference to the built-in **map** function from the **clojure.core** namespace.
 
-## Calling Clojure
+### Calling Clojure (via function references)
 
 You use the **call()** method to invoke Clojure functions and you pass positional arguments.
-Currently, up to five arguments are supported.
+Currently, up to five arguments are supported. See the next section for a cleaner way to call functions in namespaces.
+
+### Clojure Namespaces
+
+As indicated under **Clojure Functions** above, functions live in namespaces and whilst you can get direct
+references to individual functions and call them, it may actually be easier to get references to the namespaces
+themselves so that can call functions *directly* (well, actually via the magic of **onMissingMethod()**). You
+can get a reference to a namespace like this:
+
+	cfml.examples = clj.ns( 'cfml.examples' );
+	clojure.core = clj.ns( 'clojure.core' );
+
+You don't have to store the namespace references into variables that match the same structure but it makes for
+clearer CFML code in my opinion.
+
+Note: these aren't really references to the Clojure namespaces - they are new instances of the **cfmljure.cfc**
+initialized with the namespace so that method calls via **onMissingMethod()** can work!
+
+### Calling Clojure (via namespace references)
+
+Once you have a namespace reference, you can call any function in that namespace directly. Behind the scenes,
+**onMissingMethod()** delegates the call to the **call()** API but it lets you do things like:
+
+	list = cfml.examples.twice( [ 1, 2, 3 ] );
+
+Note: that means you can't call certain functions using this approach. Any function name that matches an API
+method in **cfmljure.cfc** cannot be called via a namespace reference (because **onMissingMethod()** is not
+called in that situation). Those function names are: **call**, **get**, **init**, **install**, **load**, **ns**
+(and a few *special* methods that I wouldn't expect to collide with Clojure functions: **\_defn**, **\_makePath**
+and **onMissingMethod**).

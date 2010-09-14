@@ -50,7 +50,7 @@
 			var fn = listLast( fqRef , '.' );
 			var ns = left( fqRef, len( fqRef ) - len( fn ) - 1 );
 			var r = variables._rt.var( ns, fn );
-			variables._refCache[ref] = new cfmljure( variables._project, variables._rt, variables._ns ).def( r );
+			variables._refCache[ref] = new cfmljure( variables._project, variables._rt, variables._ns )._defn( r );
 		}
 		return variables._refCache[ref];
 	}
@@ -64,7 +64,7 @@
 	}
 	
 	// tag this instance with a specific Clojure function definition so it can be called
-	public any function def( any defn ) {
+	public any function _defn( any defn ) {
 		this.defn = defn;
 		return this;
 	}

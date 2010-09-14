@@ -107,6 +107,11 @@
 		return variables._nsCache[ref];
 	}
 	
+	// shorthand to retrieve the raw definition
+	public any function _( any defn ) {
+		return get( defn ).defn;
+	}
+	
 	// tag this instance with a specific Clojure function definition so it can be called
 	public any function _defn( any defn ) {
 		this.defn = defn;

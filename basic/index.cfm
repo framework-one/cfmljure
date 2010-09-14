@@ -1,10 +1,14 @@
 ﻿<cfset start = getTickCount() />
 <cfscript>
-// load Clojure runtime (for cfml project - search path root is clj/cfml/src/):
-clj = new cfmljure( 'cfml' );
-// load scripts (from project source folder - that's clj/cfml/src/cfml/examples.clj):
-clj.load( 'cfml/examples' );
-
+	// load Clojure runtime (for cfml project - search path root is clj/cfml/src/):
+	clj = new cfmljure( 'cfml' );
+	// load scripts (from project source folder - that's clj/cfml/src/cfml/examples.clj):
+	clj.load( 'cfml/examples' );
+</cfscript>
+<cfset end = getTickCount() />
+<cfoutput>Time taken for creation and load: #end - start#ms.<br /></cfoutput>
+<cfset start = getTickCount() />
+<cfscript>
 // we can either get handles on specific functions like this:
 
 	writeOutput( '<h1>Calls via explicit handles on methods</h1>' );
@@ -84,9 +88,9 @@ clj.load( 'cfml/examples' );
 	target = { }; // normally you'd target a scope - this is just an example
 	
 	// install the configuration to the target 'scope':
-	new cfmljure().install( config, target );
+	clj.install( config, target );
 	
-	writeOutput( '<h1>Calls via implicit method lookup after installation to a target scope on every request</h1>' );
+	writeOutput( '<h1>Calls via implicit method lookup after installation to a target scope</h1>' );
 
 	// call functions:
 	

@@ -132,3 +132,38 @@ method in **cfmljure.cfc** cannot be called via a namespace reference (because *
 called in that situation). Those function names are: **call**, **get**, **init**, **install**, **load**, **ns**
 (and a few *special* methods that I wouldn't expect to collide with Clojure functions: **\_defn**, **\_makePath**
 and **onMissingMethod**).
+
+## Advanced (Integrated) Usage
+
+There's one API method we haven't discussed so far: **install()**
+
+After reading all the low-level API usage, you're probably wondering if there's an easier way to use Clojure from
+CFML without having to call all of the low-level API and the answer is... of course!
+
+The third example in the *basic* **index.cfm** shows how **cfmljure** allows you to write a simple configuration
+structure and then *install* Clojure into a designated scope or struct. The *advanced* **Application.cfc** takes
+this a little further by taking a simple configuration structure like this:
+
+	config = {
+		project = 'cfml',
+		files = 'cfml/examples',
+		ns = 'cfml.examples, clojure.core'
+	};
+
+and via the **install()** method it creates the necessary instance(s) of **cfmljure.cfc** and places that into a
+target scope (or struct) along with creating structured variables that match the specified namespaces.
+
+Given the above **config** structure, the **install()** API creates an instance of **cfmljure.cfc** for the 'cfml'
+project, loads the 'cfml/examples' script (i.e., 'clj/cfml/src/cfml/examples.clj') and creates variables **cfml.examples**
+and **clojure.core** in the target scope (or struct). In addition **clj** is added to that scope (or struct) holding the
+configured instance of **cfmljure.cfc**. The *advanced* example uses the **Application.cfc** **variables** scope as the
+target so all pages in the application can access the namespaces and call functions in an idiomatic way:
+
+	list = cfml.examples.twice( [ 1, 2, 3 ] );
+
+## Original Clojure Function References
+
+If you have a callable reference to a Clojure function, you can get the underlying raw Clojure function object via the
+**.defn** public data member. You'll need this when you want to pass a Clojure function to another Clojure function,
+such as the **map()** example that passes a reference to **times2** into the call. _I think this is a bit ugly and I'll
+come up with a better way to do this soon I hope!_

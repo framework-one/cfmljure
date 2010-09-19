@@ -22,10 +22,17 @@
 	writeOutput( '(map times2 [ 4 5 6 ]) = ' );
 	for ( n in list ) writeOutput( n & ' ' );
 	writeOutput( '<br />' );
+	
+	// loop over raw Clojure object (a list) in CFML:
+	x = cfml.examples._( 'x' );
+	writeOutput( 'x = ' );
+	for ( n in x ) writeOutput( n & ' ' );
+	writeOutput( '<br />' );
 
 </cfscript>
 <cfset end = getTickCount() />
 <cfoutput>
 	Time taken: #end - start#ms.<br />
 	<a href="?reload=true">Reload the runtime</a>.
+	<a href="?reload=false">Run (without reloading)</a>.
 </cfoutput>

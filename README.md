@@ -130,7 +130,7 @@ Once you have a namespace reference, you can call any function in that namespace
 Note: that means you can't call certain functions using this approach. Any function name that matches an API
 method in **cfmljure.cfc** cannot be called via a namespace reference (because **onMissingMethod()** is not
 called in that situation). Those function names are: **call**, **get**, **init**, **install**, **load**, **ns**
-(and a few *special* methods that I wouldn't expect to collide with Clojure functions: **\_defn**, **\_makePath**
+(and a few *special* methods that I wouldn't expect to collide with Clojure functions: **\_**, **\_def**, **\_makePath**
 and **onMissingMethod**).
 
 ## Advanced (Integrated) Usage
@@ -161,14 +161,15 @@ target so all pages in the application can access the namespaces and call functi
 
 	list = cfml.examples.twice( [ 1, 2, 3 ] );
 
-## Original Clojure Function References
+## Original Clojure Function Or Variable References
 
 You'll need this when you want to pass a Clojure function to another Clojure function,
-such as the **map()** example that passes a reference to **times2** into the call.
+such as the **map()** examplea that passes a reference to **times2** into the call, or you
+want to manipulate an entity declared as a variable in Clojure, such as the **cfml.examples.x** examples.
 
-If you have a callable reference to a Clojure function, you can get the underlying raw Clojure function object via the
-**.defn** public data member. 
+If you used **get()** to obtain a reference to a Clojure function or variable, you can get the underlying raw Clojure function or 
+variable via the **.\_()** API. Calling **_reference_.\_()** will return the underlying Clojure entity.
 
-If you have a reference to a namespace, you can get an underlying Clojure function by name via the **\_()** API. Calling
-**\_( _reference_ )** is identical to calling **get( _reference_ ).defn** so this is the more convenient API when you're
+If you have a reference to a namespace, you also can get an underlying Clojure entity by name via the **\_()** API. Calling
+**_namespace_.\_( _name_ )** is identical to calling **_namespace_.get( _name_ ).\_()** so this is the more convenient API when you're
 working with namespaces or an installed Clojure configuration.

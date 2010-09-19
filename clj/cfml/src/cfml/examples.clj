@@ -2,6 +2,8 @@
 ;; provides a number of example Clojure functions
 (ns cfml.examples)
 
+(def x '(1 2 3 4))
+
 ;; takes a string, returns a string
 (defn greet [who]
 	(str "Hello " who "!"))

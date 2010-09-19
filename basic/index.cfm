@@ -12,7 +12,7 @@
 // we can either get handles on specific functions like this:
 
 	writeOutput( '<h1>Calls via explicit handles on methods</h1>' );
-
+	
 	// get handle on individual functions (from namespace cfml.examples):
 	greet = clj.get( 'cfml.examples.greet' );
 	twice = clj.get( 'cfml.examples.twice' );
@@ -35,9 +35,15 @@
 	writeOutput( '(times2 42) = ' & times2.call( 42 ) & '<br />' );
 	
 	// call built-in Clojure function, passing raw definition of times2 function:
-	list = map.call( times2.defn, [ 4, 5, 6 ] );
+	list = map.call( times2._(), [ 4, 5, 6 ] );
 	writeOutput( '(map times2 [ 4 5 6 ]) = ' );
 	for ( n in list ) writeOutput( n & ' ' );
+	writeOutput( '<br />' );
+	
+	// loop over raw Clojure object (a list) in CFML:
+	x = clj._( 'cfml.examples.x' );
+	writeOutput( 'x = ' );
+	for ( n in x ) writeOutput( n & ' ' );
 	writeOutput( '<br />' );
 	
 </cfscript>
@@ -71,6 +77,12 @@
 	list = clojure.core.map( cfml.examples._( 'times2' ), [ 4, 5, 6 ] );
 	writeOutput( '(map times2 [ 4 5 6 ]) = ' );
 	for ( n in list ) writeOutput( n & ' ' );
+	writeOutput( '<br />' );
+	
+	// loop over raw Clojure object (a list) in CFML:
+	x = cfml.examples._( 'x' );
+	writeOutput( 'x = ' );
+	for ( n in x ) writeOutput( n & ' ' );
 	writeOutput( '<br />' );
 
 </cfscript>
@@ -110,6 +122,12 @@
 	list = target.clojure.core.map( target.cfml.examples._( 'times2' ), [ 4, 5, 6 ] );
 	writeOutput( '(map times2 [ 4 5 6 ]) = ' );
 	for ( n in list ) writeOutput( n & ' ' );
+	writeOutput( '<br />' );
+	
+	// loop over raw Clojure object (a list) in CFML:
+	x = target.cfml.examples._( 'x' );
+	writeOutput( 'x = ' );
+	for ( n in x ) writeOutput( n & ' ' );
 	writeOutput( '<br />' );
 
 </cfscript>

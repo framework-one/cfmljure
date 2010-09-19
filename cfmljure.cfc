@@ -36,17 +36,17 @@
 	public any function call() {
 		switch ( arrayLen( arguments ) ) {
 		case 0:
-			return this.defn.invoke();
+			return variables._ref.invoke();
 		case 1:
-			return this.defn.invoke( arguments[1] );
+			return variables._ref.invoke( arguments[1] );
 		case 2:
-			return this.defn.invoke( arguments[1], arguments[2] );
+			return variables._ref.invoke( arguments[1], arguments[2] );
 		case 3:
-			return this.defn.invoke( arguments[1], arguments[2], arguments[3] );
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3] );
 		case 4:
-			return this.defn.invoke( arguments[1], arguments[2], arguments[3], arguments[4] );
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4] );
 		case 5:
-			return this.defn.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5] );
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5] );
 		default:
 			throw "Unsupported call();";
 		}
@@ -59,7 +59,7 @@
 			var fn = listLast( fqRef , '.' );
 			var ns = left( fqRef, len( fqRef ) - len( fn ) - 1 );
 			var r = variables._rt.var( ns, fn );
-			variables._refCache[ref] = new cfmljure( variables._project, variables._rt, variables._ns )._defn( r );
+			variables._refCache[ref] = new cfmljure( variables._project, variables._rt, variables._ns )._def( r );
 		}
 		return variables._refCache[ref];
 	}
@@ -108,13 +108,13 @@
 	}
 	
 	// shorthand to retrieve the raw definition
-	public any function _( any defn ) {
-		return get( defn ).defn;
+	public any function _( string name = '' ) {
+		return name == '' ? variables._ref.deref() : get( name )._();
 	}
 	
 	// tag this instance with a specific Clojure function definition so it can be called
-	public any function _defn( any defn ) {
-		this.defn = defn;
+	public any function _def( any ref ) {
+		variables._ref = ref;
 		return this;
 	}
 	

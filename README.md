@@ -72,13 +72,13 @@ Otherwise, omit the project argument and cfmljure will load files by their relat
 
 ### Clojure Script Files
 
-First off, the filename is unrelated to the contents of the file. So in the **cfml/** project folder, under the
+The convention is that the relative path name of your Clojure script should match the namespace it declares -
+just like Java, and just like the dotted-path you're already used to in CFML. In the **cfml/** project folder, under the
 **src/cfml/** folder, we have **examples.clj** and it declares that it's contents live in the **cfml.examples**
-namespace - but it could be anything you want. A reasonable convention for the namespace is to follow the folder
-path. Namespaces are used for packaging code and importing functions between files.
+namespace. Namespaces are used for packaging code and importing functions between files.
 
 You load Clojure files into the runtime with the **load()** method which takes a list of script names, relative to
-the project folder (if specified - otherwise relative to the **clj/** folder). cfmljure automatically appends
+the project folder (if specified - otherwise relative to the **clj/** folder). **cfmljure** automatically appends
 **.clj** to each file. If you have subfolders, you can just put the paths in the list:
 
 	clj.load( 'main,account/info,acccount/admin' )
@@ -146,7 +146,6 @@ this a little further by taking a simple configuration structure like this:
 
 	config = {
 		project = 'cfml',
-		files = 'cfml/examples',
 		ns = 'cfml.examples, clojure.core'
 	};
 
@@ -160,6 +159,21 @@ configured instance of **cfmljure.cfc**. The *advanced* example uses the **Appli
 target so all pages in the application can access the namespaces and call functions in an idiomatic way:
 
 	list = cfml.examples.twice( [ 1, 2, 3 ] );
+
+### Namespaces and Files
+
+By default, the **install()** API loads files based on their namespace, automatically ignoring **clojure.\*** namespaces. In
+the supplied example, that means it loads 'cfml/examples' (i.e., **clj/cfml/src/cfml/examples.clj**). You can, if you wish,
+specify an explicit list of **files** to load instead of relying on the conventions. The **config** above is equivalent to:
+
+	config = {
+		project = 'cfml',
+		files = 'cfml/examples',
+		ns = 'cfml.examples, clojure.core'
+	};
+
+Specifying **files =** overrides the convention for loading files by namespace and can be useful if you want to load,
+and install, ad hoc files instead of using namespaces.
 
 ## Original Clojure Function Or Variable References
 

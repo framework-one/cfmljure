@@ -78,16 +78,27 @@
 		}
 		target.clj = clj;
 		var namespaces = listToArray( namespaceList );
+		var implicitFileList = '';
 		var ns = 0; // CFBuilder barfs on for ( var ns in namespaces ) so declare it separately!
 		for ( ns in namespaces ) {
 			var _ns = trim( ns );
 			var pair = _makePath( _ns, target );
 			pair.s[pair.key] = clj.ns( _ns );
+			if ( fileList == '' ) {
+				// autoload based on namespaces:
+				if ( listFirst( _ns, '.' ) != 'clojure' ) {
+					implicitFileList = listAppend( implicitFileList, replace( _ns, '.', '/', 'all' ) );
+				}
+			}
+		}
+		if ( implicitFileList != '' && implicitFileList != variables._files ) {
+			clj.load( implicitFileList );
 		}
 	}
 	
 	// load a list of files
 	public void function load( string fileList ) {
+		if ( fileList == '' ) return;
 		// clear the reference cache if we load any files
 		variables._refCache = { };
 		variables._files = listAppend( variables._files, fileList );

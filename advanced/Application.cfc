@@ -3,7 +3,7 @@
 	// cfmljure configuration:
 	config = {
 		project = 'cfml',
-		files = 'cfml/examples',
+		// files = 'cfml/examples', -- this is implicitly deduced from the namespaces
 		ns = 'cfml.examples, clojure.core'
 	};
 	

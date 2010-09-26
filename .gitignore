@@ -1,4 +1,5 @@
 .project
 .settings/*
+clj/task/taskdb/*
 settings.xml
 WEB-INF/*

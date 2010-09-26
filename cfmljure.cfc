@@ -54,7 +54,7 @@
 	
 	// get a specific Clojure function
 	public any function get( string ref ) {
-		var fqRef = listAppend( variables._ns, ref, '.' );
+		var fqRef = listAppend( variables._ns, replace( ref, '_', '-', 'all' ), '.' );
 		if ( !structKeyExists( variables._refCache, fqRef ) ) {
 			var fn = listLast( fqRef , '.' );
 			var ns = left( fqRef, len( fqRef ) - len( fn ) - 1 );

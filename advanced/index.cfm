@@ -8,12 +8,12 @@
 	<cfset list = cfml.examples.twice( [ 1, 2, 3 ] ) />
 	(twice [ 1 2 3 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
-	<!--- simple function call (times2 is def'd to an anonymous function literal: --->
-	(times2 42) = #cfml.examples.times2( 42 )#<br />
+	<!--- simple function call (times_2 is def'd to an anonymous function literal: --->
+	(times_2 42) = #cfml.examples.times_2( 42 )#<br />
 	
-	<!--- call built-in Clojure function, passing raw definition of times2 function: --->
-	<cfset list = clojure.core.map( cfml.examples._( 'times2' ), [ 4, 5, 6 ] ) />
-	(map times2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
+	<!--- call built-in Clojure function, passing raw definition of times_2 function: --->
+	<cfset list = clojure.core.map( cfml.examples._( 'times_2' ), [ 4, 5, 6 ] ) />
+	(map times_2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
 	<!--- loop over raw Clojure object (a list) in CFML: --->
 	<cfset x = cfml.examples._( 'x' ) />

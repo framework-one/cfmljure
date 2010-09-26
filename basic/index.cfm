@@ -14,7 +14,7 @@
 	// get handle on individual functions (from namespace cfml.examples):
 	greet = clj.get( 'cfml.examples.greet' );
 	twice = clj.get( 'cfml.examples.twice' );
-	times2 = clj.get( 'cfml.examples.times2' );
+	times_2 = clj.get( 'cfml.examples.times_2' );
 	// get handle on built-in map function (from namespace clojure.core):
 	map = clj.get( 'clojure.core.map' );
 </cfscript>
@@ -27,12 +27,12 @@
 	<cfset list = twice.call( [ 1, 2, 3 ] ) />
 	(twice [ 1 2 3 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
-	<!--- simple function call (times2 is def'd to an anonymous function literal: --->
-	(times2 42) = #times2.call( 42 )#<br />
+	<!--- simple function call (times_2 is def'd to an anonymous function literal: --->
+	(times_2 42) = #times_2.call( 42 )#<br />
 	
-	<!--- call built-in Clojure function, passing raw definition of times2 function: --->
-	<cfset list = map.call( times2._(), [ 4, 5, 6 ] ) />
-	(map times2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
+	<!--- call built-in Clojure function, passing raw definition of times_2 function: --->
+	<cfset list = map.call( times_2._(), [ 4, 5, 6 ] ) />
+	(map times_2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
 	<!--- loop over raw Clojure object (a list) in CFML: --->
 	<cfset x = clj._( 'cfml.examples.x' ) />
@@ -60,12 +60,12 @@
 	<cfset list = cfml.examples.twice( [ 1, 2, 3 ] ) />
 	(twice [ 1 2 3 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
-	<!--- simple function call (times2 is def'd to an anonymous function literal: --->
-	(times2 42) = #cfml.examples.times2( 42 )#<br />
+	<!--- simple function call (times_2 is def'd to an anonymous function literal: --->
+	(times_2 42) = #cfml.examples.times_2( 42 )#<br />
 	
-	<!--- call built-in Clojure function, passing raw definition of times2 function: --->
-	<cfset list = clojure.core.map( times2._(), [ 4, 5, 6 ] ) />
-	(map times2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
+	<!--- call built-in Clojure function, passing raw definition of times_2 function: --->
+	<cfset list = clojure.core.map( times_2._(), [ 4, 5, 6 ] ) />
+	(map times_2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
 	<!--- loop over raw Clojure object (a list) in CFML: --->
 	<cfset x = cfml.examples._( 'x' ) />
@@ -99,12 +99,12 @@
 	<cfset list = target.cfml.examples.twice( [ 1, 2, 3 ] ) />
 	(twice [ 1 2 3 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
-	<!--- simple function call (times2 is def'd to an anonymous function literal: --->
-	(times2 42) = #target.cfml.examples.times2( 42 )#<br />
+	<!--- simple function call (times_2 is def'd to an anonymous function literal: --->
+	(times_2 42) = #target.cfml.examples.times_2( 42 )#<br />
 	
-	<!--- call built-in Clojure function, passing raw definition of times2 function: --->
-	<cfset list = target.clojure.core.map( times2._(), [ 4, 5, 6 ] ) />
-	(map times2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
+	<!--- call built-in Clojure function, passing raw definition of times_2 function: --->
+	<cfset list = target.clojure.core.map( times_2._(), [ 4, 5, 6 ] ) />
+	(map times_2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
 	<!--- loop over raw Clojure object (a list) in CFML: --->
 	<cfset x = target.cfml.examples._( 'x' ) />

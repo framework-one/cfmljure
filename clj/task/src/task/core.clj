@@ -1,7 +1,6 @@
 (ns task.core
   (:use [clj-sql.core :as sql :exclude (do-insert insert-record)])
-  (:use [task.db])
-  (:use [clojure.string :as s :only (lower-case upper-case)]))
+  (:use [task.db]))
 
 ;; copies of private methods from clj-sql.core due to problem with generated keys
 (defn- join 
@@ -73,10 +72,10 @@
 
 ;; (defn- to-struct [r] (apply hash-map (flatten (map (fn [[k v]] [(s/upper-case (name k)) v]) r))))
 ;; Thanx to Baishampayan Ghose for this simpler version:
-(defn- to-struct [r] (into {} (for [[k v] r] [(s/upper-case (name k)) v])))
+(defn- to-struct [r] (into {} (for [[k v] r] [(.toUpperCase (name k)) v])))
 
 ;; (defn- to-rec [m] (apply hash-map (flatten (map (fn [[k v]] [(keyword (s/lower-case k)) v]) m))))
-(defn- to-rec [m] (into {} (for [[k v] m] [(keyword (s/lower-case k)) v])))
+(defn- to-rec [m] (into {} (for [[k v] m] [(keyword (.toLowerCase k)) v])))
 
 ;; task-specific methods
 

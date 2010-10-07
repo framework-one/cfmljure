@@ -16,9 +16,10 @@
 */
 	
 	// constructor
-	public any function init( string project = '', any rt = 0, string ns = '' ) {
+	public any function init( string project = '', any rt = 0, string ns = '', boolean classpathonly = false ) {
 		variables._project = project;
 		variables._ns = ns;
+		variables._cpo = classpathonly;
 		variables._files = '';
 		variables._refCache = { };
 		variables._nsCache = { };
@@ -59,7 +60,7 @@
 			var fn = listLast( fqRef , '.' );
 			var ns = left( fqRef, len( fqRef ) - len( fn ) - 1 );
 			var r = variables._rt.var( ns, fn );
-			variables._refCache[ref] = new cfmljure( variables._project, variables._rt, variables._ns )._def( r );
+			variables._refCache[ref] = new cfmljure( variables._project, variables._rt, variables._ns, variables._cpo )._def( r );
 		}
 		return variables._refCache[ref];
 	}
@@ -71,7 +72,7 @@
 		var namespaceList = structKeyExists( config, 'ns' ) ? config.ns : '';
 		var clj = this;
 		if ( project != variables._project ) {
-			clj = new cfmljure( project, variables._rt, variables._ns );
+			clj = new cfmljure( project, variables._rt, variables._ns, variables._cpo );
 			clj.load( fileList );
 		} else if ( fileList != variables._files ) {
 			clj.load( fileList );
@@ -102,18 +103,24 @@
 		// clear the reference cache if we load any files
 		variables._refCache = { };
 		variables._files = listAppend( variables._files, fileList );
-		var prefix = variables._project == '' ? '' : variables._project & '/src/';
 		var files = listToArray( fileList );
 		var file = 0; // CFBuilder barfs on for ( var file in files ) so declare it separately!
-		for ( file in files ) {
-			variables._rt.loadResourceScript( 'clj/' & prefix & trim( file ) & '.clj' );
+		if ( variables._cpo ) {
+			for ( file in files ) {
+				variables._rt.loadResourceScript( trim( file ) & '.clj' );
+			}
+		} else {
+			var prefix = variables._project == '' ? '' : variables._project & '/src/';
+			for ( file in files ) {
+				variables._rt.loadResourceScript( 'clj/' & prefix & trim( file ) & '.clj' );
+			}
 		}
 	}
 	
 	// set up a context for a Clojure namespace
 	public any function ns( string ref ) {
 		if ( !structKeyExists( variables._nsCache, ref ) ) {
-			variables._nsCache[ref] = new cfmljure( variables._project, variables._rt, ref ); 
+			variables._nsCache[ref] = new cfmljure( variables._project, variables._rt, ref, variables._cpo ); 
 		}
 		return variables._nsCache[ref];
 	}

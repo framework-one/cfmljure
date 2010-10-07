@@ -43,7 +43,7 @@ Now go hit the cfmljure **index.cfm** file in your browser!
 
 # Your Clojure Code
 
-Your Clojure code also needs to be on your classpath. cfmljure assumes there is a **clj/** folder on your class
+Your Clojure code also needs to be on your classpath. By default, cfmljure assumes there is a **clj/** folder on your class
 path and all your Clojure code lives under that folder.
 
 If you're working with Leiningen, your code will be organized into projects under the **clj/** folder. If you're
@@ -68,7 +68,8 @@ you're working with Leiningen, tell cfmljure which project to load from:
 
 	clj = new cfmljure( 'cfml' ); // load from the cfml project tree, the cfmljure examples project
 
-Otherwise, omit the project argument and cfmljure will load files by their relative path.
+Otherwise, omit the project argument and cfmljure will load files by their relative path. If you're working with a large,
+multi-file project, you're probably using the **classpathonly** option and will not be using a project name. See below.
 
 ### Clojure Script Files
 
@@ -78,15 +79,15 @@ just like Java, and just like the dotted-path you're already used to in CFML. In
 namespace. Namespaces are used for packaging code and importing functions between files.
 
 You load Clojure files into the runtime with the **load()** method which takes a list of script names, relative to
-the project folder (if specified - otherwise relative to the **clj/** folder). **cfmljure** automatically appends
-**.clj** to each file. If you have subfolders, you can just put the paths in the list:
+the project folder (if specified - otherwise relative to the **clj/** folder - except when using **classpathonly** mode,
+see below). **cfmljure** automatically appends **.clj** to each file. If you have subfolders, you can just put the paths in the list:
 
 	clj.load( 'main,account/info,acccount/admin' )
 
 This will load **clj/{project}/src/main.clj**, **clj/{project}/src/account/info.clj** and **clj/{project}/src/account/admin.clj**
 if you specified a project, **clj/main.clj**, **clj/account/info.clj** and **clj/account/admin.clj** if you did not.
 
-This makes it easy to work with Leiningen projects as well as ad hoc code organization.
+This makes it easy to work with Leiningen projects as well as ad hoc code organization. Again, see **classpathonly** below.
 
 ### Clojure Functions
 
@@ -187,3 +188,29 @@ variable via the **.\_()** API. Calling **_reference_.\_()** will return the und
 If you have a reference to a namespace, you also can get an underlying Clojure entity by name via the **\_()** API. Calling
 **_namespace_.\_( _name_ )** is identical to calling **_namespace_.get( _name_ ).\_()** so this is the more convenient API when you're
 working with namespaces or an installed Clojure configuration.
+
+## classpathonly Mode
+
+All of the above works fairly well when you're dealing with small projects and only a few files. Once you start to have more
+complex dependencies across multiple files, it begins to break down because the Clojure runtime (RT) only searches your
+classpath for files that are *use*d in **ns** declarations.
+
+**cfmljure** provides a mode that supports this better but you need to manage your class path more explicitly for your
+JEE / Servlet container. If you instantiate **cfmljure** like this:
+
+	clj = new cfmljure( classpathonly = true );
+
+then you should not use a project name and all files will be loaded relative to the classpath *without the **clj/** directory prefix*.
+
+In this situation, you'll need to add several paths to your JEE / Servlet container's classpath for Clojure to be able
+to load files correctly:
+
+	{project}/lib
+	{project}/lib/*.jar
+	{project}/src
+
+With those three additions to your classpath, **cfmljure** will be able to find and load both compiled and source Clojure files,
+libraries and additional resources such as property files.
+
+For Tomcat, the easiest way to do this is to edit **common.loader** in the **{tomcat}/conf/catalina.properties** file.
+Consult your server's documentation for more details.

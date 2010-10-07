@@ -71,9 +71,13 @@
   (sql/with-connection db
     (insert-record t r)))
 
-(defn- to-struct [r] (apply hash-map (flatten (map (fn [[k v]] [(s/upper-case (name k)) v]) r))))
+;; (defn- to-struct [r] (apply hash-map (flatten (map (fn [[k v]] [(s/upper-case (name k)) v]) r))))
+;; Thanx to Baishampayan Ghose for this simpler version and Mark Engelberg
+;; for pointing out raw .toUpperCase is slower than s/upper-case:
+(defn- to-struct [r] (into {} (for [[k v] r] [(s/upper-case (name k)) v])))
 
-(defn- to-rec [m] (apply hash-map (flatten (map (fn [[k v]] [(keyword (s/lower-case k)) v]) m))))
+;; (defn- to-rec [m] (apply hash-map (flatten (map (fn [[k v]] [(keyword (s/lower-case k)) v]) m))))
+(defn- to-rec [m] (into {} (for [[k v] m] [(keyword (s/lower-case k)) v])))
 
 ;; task-specific methods
 

@@ -3,7 +3,7 @@
 	// cfmljure configuration:
 	config = {
 		project = 'task',
-		ns = 'task.db, task.create, task.core, clojure.core, clojure.string'
+		ns = 'task.create, task.core'
 	};
 	
 	// magic that auto-installs Clojure stuff into variables scope:

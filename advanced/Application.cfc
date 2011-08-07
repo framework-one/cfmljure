@@ -1,20 +1,16 @@
 ﻿component {
 	this.name = hash( getBaseTemplatePath() );
 	// cfmljure configuration:
-	config = {
-		project = 'cfml',
-		// files = 'cfml/examples', -- this is implicitly deduced from the namespaces
-		ns = 'cfml.examples, clojure.core'
-	};
+	namespaces = 'cfml.examples, clojure.core';
 	
 	// magic that auto-installs Clojure stuff into variables scope:
 	function onRequestStart() {
 		if ( !structKeyExists( application, 'clj') ||
 				( structKeyExists( URL, 'reload' ) && isBoolean( URL.reload ) && URL.reload ) ) {
-			application.clj = new cfmljure( config.project );
+			application.clj = new cfmljure();
 		}
 		request.start = getTickCount();
-		application.clj.install( config, variables );
+		application.clj.install( namespaces, variables );
 		request.end = getTickCount();
 	}
 	

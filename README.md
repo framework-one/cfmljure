@@ -2,16 +2,15 @@
 
 To use cfmljure, you need the Clojure libraries. I think the easiest way to do that is with Leiningen, the Clojure build tool.
 
-**Note: cfmljure.cfc requires Adobe ColdFusion 9.0.1 or Railo 3.1.2 BER build!**
+**Note: cfmljure.cfc requires Adobe ColdFusion 9.0.1 or Railo 3.2.2**
 
 ## Installation with Leiningen
 
-Copy the **clj/** folder from the cfmljure project to your server's classpath (or create a 
-symbolic link). Install the **lein** script from http://github.com/technomancy/leiningen 
+Install the **lein** script from http://github.com/technomancy/leiningen 
 (download the **lein** script, make it executable, run **lein self-install** to complete 
 the installation).
 
-Run the **cfmljure** tests:
+In each of the projects, clj/cfml and clj/tasks, run the **cfmljure** tests:
 
 	lein clean, deps, test
 
@@ -23,8 +22,10 @@ You should see (with a different file path, I expect):
 	Ran 7 tests containing 7 assertions.
 	0 failures, 0 errors.
 
-Now you can copy the two Clojure JARs from the **clj/cfml/lib/** folder to your server's classpath
-and restart your CFML engine. Now go hit the cfmljure **index.cfm** file in your browser!
+Now you can copy the two Clojure JARs from the **clj/cfml/lib/** folder to your server's classpath.
+In your **WEB-INF** folder, create a **classes** folder and copy **clj/cfml**
+and **clj/task** to that **classes** folder. Restart your CFML engine.
+Now go hit the cfmljure **index.cfm** file in your browser!
 
 ## Installation without Leiningen
 
@@ -38,16 +39,12 @@ Download both Clojure and Clojure Contrib and unzip them. Copy **clojure.jar** (
 and **clojure-contrib-1.2.0.jar** (from the target subfolder of clojure-contrib-1.2.0.zip) to your classpath.
 I put them in **{tomcat}/lib** - and restart your CFML engine. You can ignore the rest of those ZIP files.
 
-Copy the **clj/** folder from the cfmljure project to your server's classpath (or create a symbolic link).
-Now go hit the cfmljure **index.cfm** file in your browser!
+Copy the **clj/** folder contents from the cfmljure project to your server's **WEB-INF/classes** folder (or create a symbolic link)
+and restart your CFML engine. Now go hit the cfmljure **index.cfm** file in your browser!
 
 # Your Clojure Code
 
-Your Clojure code also needs to be on your classpath. By default, cfmljure assumes there is a **clj/** folder on your class
-path and all your Clojure code lives under that folder.
-
-If you're working with Leiningen, your code will be organized into projects under the **clj/** folder. If you're
-not using Leiningen, you can organize your files however you want but I think you're missing out...
+Your Clojure code also needs to be on your classpath.
 
 # Understanding cfmljure.cfc
 
@@ -63,13 +60,9 @@ The advanced / automated example is explored below.
 
 ### Loading the Clojure runtime (RT)
 
-The first thing you need to do is create an instance of **cfmljure.cfc** which loads the Clojure runtime system. If
-you're working with Leiningen, tell cfmljure which project to load from:
+The first thing you need to do is create an instance of **cfmljure.cfc** which loads the Clojure runtime system:
 
-	clj = new cfmljure( 'cfml' ); // load from the cfml project tree, the cfmljure examples project
-
-Otherwise, omit the project argument and cfmljure will load files by their relative path. If you're working with a large,
-multi-file project, you're probably using the **classpathonly** option and will not be using a project name. See below.
+	clj = new cfmljure();
 
 ### Clojure Script Files
 
@@ -78,16 +71,14 @@ just like Java, and just like the dotted-path you're already used to in CFML. In
 **src/cfml/** folder, we have **examples.clj** and it declares that it's contents live in the **cfml.examples**
 namespace. Namespaces are used for packaging code and importing functions between files.
 
-You load Clojure files into the runtime with the **load()** method which takes a list of script names, relative to
-the project folder (if specified - otherwise relative to the **clj/** folder - except when using **classpathonly** mode,
-see below). **cfmljure** automatically appends **.clj** to each file. If you have subfolders, you can just put the paths in the list:
+You load Clojure files into the runtime with the **load()** method which takes a list of script names, root-relative to
+the project folder. If you have subfolders, you can just put the paths in the list:
 
-	clj.load( 'main,account/info,acccount/admin' )
+	clj.load( '/main,/account/info,/acccount/admin' )
 
-This will load **clj/{project}/src/main.clj**, **clj/{project}/src/account/info.clj** and **clj/{project}/src/account/admin.clj**
-if you specified a project, **clj/main.clj**, **clj/account/info.clj** and **clj/account/admin.clj** if you did not.
+This will load **/main.clj**, **/account/info.clj** and **/account/admin.clj**.
 
-This makes it easy to work with Leiningen projects as well as ad hoc code organization. Again, see **classpathonly** below.
+This makes it easy to work with Leiningen projects as well as ad hoc code organization.
 
 ### Clojure Functions
 
@@ -102,7 +93,7 @@ The second line gets a reference to the built-in **map** function from the **clo
 
 ### Calling Clojure (via function references)
 
-You use the **call()** method to invoke Clojure functions and you pass positional arguments.
+You use the **_call()** method to invoke Clojure functions and you pass positional arguments.
 Currently, up to five arguments are supported. See the next section for a cleaner way to call functions in namespaces.
 
 ### Clojure Namespaces
@@ -130,7 +121,7 @@ Once you have a namespace reference, you can call any function in that namespace
 
 Note: that means you can't call certain functions using this approach. Any function name that matches an API
 method in **cfmljure.cfc** cannot be called via a namespace reference (because **onMissingMethod()** is not
-called in that situation). Those function names are: **call**, **get**, **init**, **install**, **load**, **ns**
+called in that situation). Those function names are: **_call**, **_get**, **_init**, **_install**, **_load**, **_ns**
 (and a few *special* methods that I wouldn't expect to collide with Clojure functions: **\_**, **\_def**, **\_makePath**
 and **onMissingMethod**).
 
@@ -145,16 +136,13 @@ The third example in the *basic* **index.cfm** shows how **cfmljure** allows you
 structure and then *install* Clojure into a designated scope or struct. The *advanced* **Application.cfc** takes
 this a little further by taking a simple configuration structure like this:
 
-	config = {
-		project = 'cfml',
-		ns = 'cfml.examples, clojure.core'
-	};
+	namespaces = 'cfml.examples, clojure.core';
 
 and via the **install()** method it creates the necessary instance(s) of **cfmljure.cfc** and places that into a
 target scope (or struct) along with creating structured variables that match the specified namespaces.
 
-Given the above **config** structure, the **install()** API creates an instance of **cfmljure.cfc** for the 'cfml'
-project, loads the 'cfml/examples' script (i.e., 'clj/cfml/src/cfml/examples.clj') and creates variables **cfml.examples**
+Given the above list of namespaces, the **install()** API creates an instance of **cfmljure.cfc** for the 'cfml'
+project, loads the 'cfml/examples' script (i.e., '/cfml/examples.clj') and creates variables **cfml.examples**
 and **clojure.core** in the target scope (or struct). In addition **clj** is added to that scope (or struct) holding the
 configured instance of **cfmljure.cfc**. The *advanced* example uses the **Application.cfc** **variables** scope as the
 target so all pages in the application can access the namespaces and call functions in an idiomatic way:
@@ -163,18 +151,8 @@ target so all pages in the application can access the namespaces and call functi
 
 ### Namespaces and Files
 
-By default, the **install()** API loads files based on their namespace, automatically ignoring **clojure.\*** namespaces. In
-the supplied example, that means it loads 'cfml/examples' (i.e., **clj/cfml/src/cfml/examples.clj**). You can, if you wish,
-specify an explicit list of **files** to load instead of relying on the conventions. The **config** above is equivalent to:
-
-	config = {
-		project = 'cfml',
-		files = 'cfml/examples',
-		ns = 'cfml.examples, clojure.core'
-	};
-
-Specifying **files =** overrides the convention for loading files by namespace and can be useful if you want to load,
-and install, ad hoc files instead of using namespaces.
+The **install()** API loads files based on their namespace, automatically ignoring **clojure.\*** namespaces. In
+the supplied example, that means it loads 'cfml/examples' (i.e., **/cfml/examples.clj**).
 
 ## Original Clojure Function Or Variable References
 
@@ -185,32 +163,6 @@ want to manipulate an entity declared as a variable in Clojure, such as the **cf
 If you used **get()** to obtain a reference to a Clojure function or variable, you can get the underlying raw Clojure function or 
 variable via the **.\_()** API. Calling **_reference_.\_()** will return the underlying Clojure entity.
 
-If you have a reference to a namespace, you also can get an underlying Clojure entity by name via the **\_()** API. Calling
-**_namespace_.\_( _name_ )** is identical to calling **_namespace_.get( _name_ ).\_()** so this is the more convenient API when you're
+If you have a reference to a namespace, you also can get an underlying Clojure entity by name via the **\_()** API or *_name()* implicit function.
+Calling **_namespace_.\_( _name_ )** or **_namespace_.\__name_()** is identical to calling **_namespace_.get( _name_ ).\_()** so this is the more convenient API when you're
 working with namespaces or an installed Clojure configuration.
-
-## classpathonly Mode
-
-All of the above works fairly well when you're dealing with small projects and only a few files. Once you start to have more
-complex dependencies across multiple files, it begins to break down because the Clojure runtime (RT) only searches your
-classpath for files that are *use*d in **ns** declarations.
-
-**cfmljure** provides a mode that supports this better but you need to manage your class path more explicitly for your
-JEE / Servlet container. If you instantiate **cfmljure** like this:
-
-	clj = new cfmljure( classpathonly = true );
-
-then you should not use a project name and all files will be loaded relative to the classpath *without the **clj/** directory prefix*.
-
-In this situation, you'll need to add several paths to your JEE / Servlet container's classpath for Clojure to be able
-to load files correctly:
-
-	{project}/lib
-	{project}/lib/*.jar
-	{project}/src
-
-With those three additions to your classpath, **cfmljure** will be able to find and load both compiled and source Clojure files,
-libraries and additional resources such as property files.
-
-For Tomcat, the easiest way to do this is to edit **common.loader** in the **{tomcat}/conf/catalina.properties** file.
-Consult your server's documentation for more details.

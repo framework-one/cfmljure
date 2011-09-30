@@ -41,7 +41,7 @@
 		return name == "" ? variables._ref.deref() : this._get( name )._();
 	}
 	
-	// explicit call method with up to five positional arguments
+	// explicit call method with up to ten positional arguments
 	public any function _call() {
 		switch ( arrayLen( arguments ) ) {
 		case 0:
@@ -56,6 +56,21 @@
 			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4] );
 		case 5:
 			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5] );
+		case 6:
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6] );
+		case 7:
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7] );
+		case 8:
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8] );
+		case 9:
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8], arguments[9] );
+		case 10:
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10] );
 		default:
 			throw "Unsupported call();";
 		}

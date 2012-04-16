@@ -12,11 +12,11 @@
 	(times_2 42) = #cfml.examples.times_2( 42 )#<br />
 	
 	<!--- call built-in Clojure function, passing raw definition of times_2 function: --->
-	<cfset list = clojure.core.map( cfml.examples._( 'times_2' ), [ 4, 5, 6 ] ) />
+	<cfset list = clojure.core.map( cfml.examples._times_2(), [ 4, 5, 6 ] ) />
 	(map times_2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
 	<!--- loop over raw Clojure object (a list) in CFML: --->
-	<cfset x = cfml.examples._( 'x' ) />
+	<cfset x = cfml.examples._x() />
 	x = <cfloop item="n" collection="#x#">#n# </cfloop><br />
 	<cfset end = getTickCount() />
 	

@@ -2,9 +2,12 @@
 
 To use cfmljure, you need the Clojure libraries. I think the easiest way to do that is with Leiningen, the Clojure build tool.
 
-**Note: cfmljure.cfc requires Adobe ColdFusion 9.0.1 or Railo 3.2.2**
+**Note: cfmljure.cfc requires Adobe ColdFusion 9.0.1 or Railo 3.2.2;
+  Because of the way Adobe ColdFusion deals with arrays of numbers,
+  many of the examples do not run as-is - but they run fine on Railo
+  so I'd recommend you try Railo if you want to play with cfmljure.**
 
-## Installation with Leiningen
+## Installation (with Leiningen)
 
 Install the **lein** script from http://github.com/technomancy/leiningen 
 (download the **lein** script, make it executable, run **lein self-install** to complete 
@@ -26,21 +29,6 @@ Now you can copy the two Clojure JARs from the **clj/cfml/lib/** folder to your 
 In your **WEB-INF** folder, create a **classes** folder and copy **clj/cfml**
 and **clj/task** to that **classes** folder. Restart your CFML engine.
 Now go hit the cfmljure **index.cfm** file in your browser!
-
-## Installation without Leiningen
-
-If you really don't want to mess with Leiningen, you can install Clojure manually. However, without Leiningen
-you're not going to be able to run the tests and build JAR files etc so I strongly recommend the first installation
-approach above.
-
-Download the Clojure libraries from here: http://clojure.org/downloads
-
-Download both Clojure and Clojure Contrib and unzip them. Copy **clojure.jar** (from the clojure-1.2.0.zip)
-and **clojure-contrib-1.2.0.jar** (from the target subfolder of clojure-contrib-1.2.0.zip) to your classpath.
-I put them in **{tomcat}/lib** - and restart your CFML engine. You can ignore the rest of those ZIP files.
-
-Copy the **clj/** folder contents from the cfmljure project to your server's **WEB-INF/classes** folder (or create a symbolic link)
-and restart your CFML engine. Now go hit the cfmljure **index.cfm** file in your browser!
 
 # Your Clojure Code
 

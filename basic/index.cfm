@@ -64,31 +64,34 @@
 	(times_2 42) = #cfml.examples.times_2( 42 )#<br />
 	
 	<!--- call built-in Clojure function, passing raw definition of times_2 function: --->
-	<cfset list = clojure.core.map( times_2._(), [ 4, 5, 6 ] ) />
+	<cfset list = clojure.core.map( cfml.examples._times_2(), [ 4, 5, 6 ] ) />
 	(map times_2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
 	<!--- loop over raw Clojure object (a list) in CFML: --->
-	<cfset x = cfml.examples._( 'x' ) />
+	<cfset x = cfml.examples._x() />
 	x = <cfloop item="n" collection="#x#">#n# </cfloop><br />
 	<cfset end = getTickCount() />
 	
 	Time taken: #end - start#ms.<br />
 	
-	<cfset start = getTickCount() />
 </cfoutput>
 <cfscript>
 // 3. Call Clojure by configuration and installation:
-	
+	start = getTickCount();
+
 	namespaces = 'cfml.examples, clojure.core';
 	target = { }; // normally you'd target a scope - this is just an example
 	
 	// install the configuration to the target 'scope':
 	clj.install( namespaces, target );
 	
+	end = getTickCount();
+    writeOutput( '<h1>Calls via implicit method lookup after installation to a target scope</h1>' );
+	writeOutput( 'Time taken for install: #end - start#ms.<br /><br />' );
+
+	start = getTickCount();
 </cfscript>
 <cfoutput>
-	<h1>Calls via implicit method lookup after installation to a target scope</h1>
-
 	(greet "World") = #target.cfml.examples.greet( 'World' )#<br />
 	
 	<!--- pass CFML array to Clojure and loop over Clojure sequence that comes back: --->
@@ -99,11 +102,11 @@
 	(times_2 42) = #target.cfml.examples.times_2( 42 )#<br />
 	
 	<!--- call built-in Clojure function, passing raw definition of times_2 function: --->
-	<cfset list = target.clojure.core.map( times_2._(), [ 4, 5, 6 ] ) />
+	<cfset list = target.clojure.core.map( target.cfml.examples._times_2(), [ 4, 5, 6 ] ) />
 	(map times_2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
 	
 	<!--- loop over raw Clojure object (a list) in CFML: --->
-	<cfset x = target.cfml.examples._( 'x' ) />
+	<cfset x = target.cfml.examples._x() />
 	x = <cfloop item="n" collection="#x#">#n# </cfloop><br />
 	<cfset end = getTickCount() />
 	

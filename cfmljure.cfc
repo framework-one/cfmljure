@@ -1,6 +1,6 @@
 ﻿component {
 /*
-	Copyright (c) 2010, Sean Corfield
+	Copyright (c) 2012, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 		return this;
 	}
 	
-	// public API: call(), get( string ref ), install( string namespaceList, struct target ), load( string fileList ), ns( string ref )
+	// public API: call(), get( string ref ), install( any namespaceList, struct target ), load( string fileList ), ns( string ref )
 	// also _( string name = "" ) to deference an item or to get a reference to named item
 	
 	// shorthand to retrieve the raw definition
@@ -95,8 +95,8 @@
 	}
 	
 	// install from a configuration into a target
-	public void function _install( string namespaceList, struct target ) {
-		var namespaces = listToArray( namespaceList );
+	public void function _install( any namespaceList, struct target ) {
+		var namespaces = isArray( namespaceList ) ? namespaceList : listToArray( namespaceList );
 		var implicitFileList = "";
 		var clj = this;
 		for ( var ns in namespaces ) {

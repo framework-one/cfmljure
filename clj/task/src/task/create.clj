@@ -1,5 +1,5 @@
 (ns task.create
-  (:use [clj-sql.core :as sql])
+  (:use [clojure.java.jdbc :as sql :only (with-connection create-table drop-table)])
   (:use [task.db]))
 
 (defn create-tables []

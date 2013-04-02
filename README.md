@@ -15,20 +15,16 @@ the installation).
 
 In each of the projects, clj/cfml and clj/tasks, run the **cfmljure** tests:
 
-	lein clean, deps, test
+	lein do clean, deps, test, jar
 
 You should see (with a different file path, I expect):
 
-	Cleaning up.
-	Copying 2 files to /Developer/tomcat-ws/lib/clj/cfml/lib
-	Testing cfml.test.examples
-	Ran 7 tests containing 7 assertions.
-	0 failures, 0 errors.
+    lein test cfml.test.examples
+    Ran 7 tests containing 7 assertions.
+    0 failures, 0 errors.
+    Created C:\Users\amyers\projects\cfmljure\clj\cfml\target\cfml-1.0.0-SNAPSHOT.jar
 
-Now you can copy the two Clojure JARs from the **clj/cfml/lib/** folder to your server's classpath.
-In your **WEB-INF** folder, create a **classes** folder and copy **clj/cfml**
-and **clj/task** to that **classes** folder. Restart your CFML engine.
-Now go hit the cfmljure **index.cfm** file in your browser!
+Now you can copy the JAR from the **clj/cfml/target/** folder to your server's classpath ( **WEB_INF/lib** ).  You will also need to copy clojure-1.5.1.jar to this location. In your **WEB-INF** folder, create a **classes** folder and copy **clj/cfml** and **clj/task** to that **classes** folder. Restart your CFML engine. Now go hit the cfmljure **index.cfm** file in your browser!
 
 # Your Clojure Code
 

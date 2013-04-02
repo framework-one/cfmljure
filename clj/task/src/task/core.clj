@@ -1,5 +1,5 @@
 (ns task.core
-  (:use [clj-sql.core :as sql])
+  (:use [clojure.java.jdbc :as sql :only (with-connection with-query-results insert-record)])
   (:use [task.db])
   (:use [clojure.string :as s :only (lower-case upper-case)]))
 

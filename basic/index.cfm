@@ -7,44 +7,21 @@
 	end = getTickCount();
 	writeOutput( 'Time taken for creation and load: #end - start#ms.<br />' );
 	
-	start = getTickCount();
+// As of June 20th, 2013, calling get() with a qualified name is no longer
+// supported because it interfered with caching references properly!
 
-// 1. Call Clojure by getting handles on specific functions:
+// No longer supported: Call Clojure by getting handles on specific functions:
 
 	// get handle on individual functions (from namespace cfml.examples):
-	greet = clj.get( 'cfml.examples.greet' );
-	twice = clj.get( 'cfml.examples.twice' );
-	times_2 = clj.get( 'cfml.examples.times_2' );
+//	greet = clj.get( 'cfml.examples.greet' );
+//	twice = clj.get( 'cfml.examples.twice' );
+//	times_2 = clj.get( 'cfml.examples.times_2' );
 	// get handle on built-in map function (from namespace clojure.core):
-	map = clj.get( 'clojure.core.map' );
-</cfscript>
-<cfoutput>
-	<h1>Calls via explicit handles on methods</h1>
-	
-	(greet "World") = #greet._call( 'World' )#<br />
-	
-	<!--- pass CFML array to Clojure and loop over Clojure sequence that comes back: --->
-	<cfset list = twice._call( [ 1, 2, 3 ] ) />
-	(twice [ 1 2 3 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
-	
-	<!--- simple function call (times_2 is def'd to an anonymous function literal: --->
-	(times_2 42) = #times_2._call( 42 )#<br />
-	
-	<!--- call built-in Clojure function, passing raw definition of times_2 function: --->
-	<cfset list = map._call( times_2._(), [ 4, 5, 6 ] ) />
-	(map times_2 [ 4 5 6 ]) = <cfloop index="n" array="#list#">#n# </cfloop><br />
-	
-	<!--- loop over raw Clojure object (a list) in CFML: --->
-	<cfset x = clj._( 'cfml.examples.x' ) />
-	x = <cfloop item="n" collection="#x#">#n# </cfloop><br />
-	<cfset end = getTickCount() />
-	
-	Time taken: #end - start#ms.<br />
-	
-	<cfset start = getTickCount() />
-</cfoutput>
-<cfscript>
+//	map = clj.get( 'clojure.core.map' );
+
 // 2. Call Clojure by getting the namespaces and then calling methods directly:
+
+	start = getTickCount();
 
 	// setup my namespaces:
 	cfml.examples = clj.ns( 'cfml.examples' );

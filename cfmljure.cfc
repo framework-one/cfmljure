@@ -84,10 +84,10 @@
 	
 	// get a specific Clojure function
 	public any function _get( string ref ) {
-		var fqRef = replace( listAppend( variables._ns, ref, "." ), "_", "-", "all" );
-		if ( !structKeyExists( variables._refCache, fqRef ) ) {
-			var fn = listLast( fqRef , "." );
-			var ns = left( fqRef, len( fqRef ) - len( fn ) - 1 );
+		if ( !structKeyExists( variables._refCache, ref ) ) {
+            if ( find( ".", ref ) ) throw "Qualified name #ref# unsupported in get()";
+            var fn = replace( ref, "_", "-", "all" );
+            var ns = replace( variables._ns, "_", "-", "all" );
 			var r = variables._rt.var( ns, fn );
 			variables._refCache[ref] = new cfmljure( variables._rt, variables._ns )._def( r );
 		}

@@ -198,7 +198,7 @@ component {
         if ( !structKeyExists( variables, "_clj_require" ) ) {
             variables._clj_require = _var( "clojure.core", "require" );
         }
-        variables._clj_require.invoke( variables.read( ns ) );
+        variables._clj_require.invoke( this.read( ns ) );
     }
 
     private any function _var( string ns, string name ) {

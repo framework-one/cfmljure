@@ -3,6 +3,7 @@ component {
     public any function init( string project = "", numeric timeout = 300,
                               string ns = "", any v = 0 ) {
         if ( project != "" ) {
+            variables._clj_root = this;
             variables._clj_ns = "";
             var script = getTempFile( getTempDirectory(), "lein" );
             var nl = server.separator.line;
@@ -75,7 +76,7 @@ component {
     }
 
     public any function deref() {
-        return this.clojure.core.deref( variables._clj_v );
+        return variables._clj_root.clojure.core.deref( variables._clj_v );
     }
 
     public any function install( string nsList ) {

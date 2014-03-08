@@ -64,15 +64,15 @@ component {
                 this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
             }
             // promote API:
-            for ( var n in [ "install", "read" ] ) {
-                this[ n ] = this[ "_" & n ];
-            }
+            this.install = this._install;
+            this.read = this._read;
             // auto-load clojure.core
             _install( "clojure.core" );
         } else if ( !isSimpleValue( v ) ) {
             variables._clj_root = root;
             variables._clj_ns = ns;
             variables._clj_v = v;
+            // allow deref on value:
             this.deref = this._deref;
         } else if ( ns != "" ) {
             variables._clj_root = root;

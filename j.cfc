@@ -74,15 +74,15 @@ component {
         return this;
     }
 
+    public any function deref() {
+        return this.clojure.core.deref( variables._clj_v );
+    }
+
     public any function install( string nsList ) {
         var nsArray = listToArray( nsList );
         for ( var ns in nsArray ) {
             _install( trim( ns ) );
         }
-    }
-
-    public any function keyword( string s ) {
-        return this.clojure.core.keyword( s );
     }
 
     public any function read( string expr ) {
@@ -101,15 +101,16 @@ component {
 
     private any function __install( array nsParts ) {
         var first = nsParts[ 1 ];
+        var _first = replace( first, "-", "_", "all" );
         var n = arrayLen( nsParts );
-        if ( !structKeyExists( this, first ) ) {
-            this[ first ] = duplicate( this ).init(
+        if ( !structKeyExists( this, _first ) ) {
+            this[ _first ] = duplicate( this ).init(
                 ns = listAppend( variables._clj_ns, first, "." )
             );
         }
         if ( n > 1 ) {
             arrayDeleteAt( nsParts, 1 );
-            this[ first ].__install( nsParts );
+            this[ _first ].__install( nsParts );
         }
     }
 
@@ -190,21 +191,20 @@ component {
     }
 
     public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
-        if ( left( missingMethodName, 1 ) == "_" ) {
-            missingMethodName = right( missingMethodName, len( missingMethod ) - 1 );
-            if ( !structKeyExists( this, missingMethodName ) ) {
-                this[ missingMethodName ] = duplicate( this ).init(
-                    v = _var( variables._clj_ns, missingMethodName )
-                );
-            }
-            return this[ missingMethod ];
+        var ref = left( missingMethodName, 1 ) == "_";
+        if ( ref ) {
+            missingMethodName = right( missingMethodName, len( missingMethodName ) - 1 );
+        }
+        if ( !structKeyExists( this, missingMethodName ) ) {
+            this[ missingMethodName ] = duplicate( this ).init(
+                v = _var( variables._clj_ns, missingMethodName )
+            );
+        }
+        var v = this[ missingMethodName ];
+        if ( ref ) {
+            return v;
         } else {
-            if ( !structKeyExists( this, missingMethodName ) ) {
-                this[ missingMethodName ] = duplicate( this ).init(
-                    v = _var( variables._clj_ns, missingMethodName )
-                );
-            }
-            return this[ missingMethodName ]._call( argumentCollection = missingMethodArguments );
+            return v._call( argumentCollection = missingMethodArguments );
         }
     }
 

@@ -63,6 +63,10 @@ component {
                 variables._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
                 variables._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
             }
+            // promote API:
+            for ( var n in [ "deref", "install", "read" ] ) {
+                this[ n ] = this[ "_" & n ];
+            }
             // auto-load clojure.core
             _install( "clojure.core" );
         } else if ( ns != "" ) {
@@ -75,18 +79,18 @@ component {
         return this;
     }
 
-    public any function deref() {
+    public any function _deref() {
         return variables._clj_root.clojure.core.deref( variables._clj_v );
     }
 
-    public any function install( string nsList ) {
+    public any function _install( string nsList ) {
         var nsArray = listToArray( nsList );
         for ( var ns in nsArray ) {
-            _install( trim( ns ) );
+            __install( trim( ns ) );
         }
     }
 
-    public any function read( string expr ) {
+    public any function _read( string expr ) {
         var args = [ expr ];
         return variables._clj_read.invoke( javaCast( "null", 0 ), args.toArray() );
     }
@@ -100,7 +104,12 @@ component {
         return result.toArray();
     }
 
-    private any function __install( array nsParts ) {
+    private any function __install( string ns ) {
+        _require( ns );
+        ___install( listToArray( ns, "." ) );
+    }
+
+    private any function ___install( array nsParts ) {
         var first = nsParts[ 1 ];
         var _first = replace( first, "-", "_", "all" );
         var n = arrayLen( nsParts );
@@ -111,7 +120,7 @@ component {
         }
         if ( n > 1 ) {
             arrayDeleteAt( nsParts, 1 );
-            this[ _first ].__install( nsParts );
+            this[ _first ].___install( nsParts );
         }
     }
 
@@ -172,11 +181,6 @@ component {
             throw "cfmljure cannot call that method with that many arguments.";
             break;
         }
-    }
-
-    private any function _install( string ns ) {
-        _require( ns );
-        __install( listToArray( ns, "." ) );
     }
 
     private void function _require( string ns ) {

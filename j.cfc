@@ -190,12 +190,22 @@ component {
     }
 
     public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
-        if ( !structKeyExists( this, missingMethodName ) ) {
-            this[ missingMethodName ] = duplicate( this ).init(
-                v = _var( variables._clj_ns, missingMethodName )
-            );
+        if ( left( missingMethodName, 1 ) == "_" ) {
+            missingMethodName = right( missingMethodName, len( missingMethod ) - 1 );
+            if ( !structKeyExists( this, missingMethodName ) ) {
+                this[ missingMethodName ] = duplicate( this ).init(
+                    v = _var( variables._clj_ns, missingMethodName )
+                );
+            }
+            return this[ missingMethod ];
+        } else {
+            if ( !structKeyExists( this, missingMethodName ) ) {
+                this[ missingMethodName ] = duplicate( this ).init(
+                    v = _var( variables._clj_ns, missingMethodName )
+                );
+            }
+            return this[ missingMethodName ]._call( argumentCollection = missingMethodArguments );
         }
-        return this[ missingMethodName ]._call( argumentCollection = missingMethodArguments );
     }
 
 }

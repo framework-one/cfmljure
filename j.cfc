@@ -1,7 +1,7 @@
 component {
 
     public any function init( string project = "", numeric timeout = 300,
-                              string ns = "", any v = 0 ) {
+                              string ns = "", any v = 0, any root = 0 ) {
         if ( project != "" ) {
             variables._clj_root = this;
             variables._clj_ns = "";
@@ -55,24 +55,28 @@ component {
             try {
                 var clj6 = newCL.loadClass( "clojure.java.api.Clojure" );
                 out.println( "Detected Clojure 1.6 or later" );
-                variables._clj_var  = clj6.getMethod( "var", __classes( "Object", 2 ) );
-                variables._clj_read = clj6.getMethod( "read", __classes( "String" ) );
+                this._clj_var  = clj6.getMethod( "var", __classes( "Object", 2 ) );
+                this._clj_read = clj6.getMethod( "read", __classes( "String" ) );
             } catch ( any e ) {
                 var clj5 = newCL.loadClass( "clojure.lang." );
                 out.println( "Falling back to Clojure 1.5 or earlier" );
-                variables._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
-                variables._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
+                this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
+                this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
             }
             // promote API:
-            for ( var n in [ "deref", "install", "read" ] ) {
+            for ( var n in [ "install", "read" ] ) {
                 this[ n ] = this[ "_" & n ];
             }
             // auto-load clojure.core
             _install( "clojure.core" );
-        } else if ( ns != "" ) {
-            variables._clj_ns = ns;
         } else if ( !isSimpleValue( v ) ) {
+            variables._clj_root = root;
+            variables._clj_ns = ns;
             variables._clj_v = v;
+            this.deref = this._deref;
+        } else if ( ns != "" ) {
+            variables._clj_root = root;
+            variables._clj_ns = ns;
         } else {
             throw "cfmljure requires the path of a Leiningen project.";
         }
@@ -92,7 +96,7 @@ component {
 
     public any function _read( string expr ) {
         var args = [ expr ];
-        return variables._clj_read.invoke( javaCast( "null", 0 ), args.toArray() );
+        return variables._clj_root._clj_read.invoke( javaCast( "null", 0 ), args.toArray() );
     }
 
     // helper functions:
@@ -114,8 +118,9 @@ component {
         var _first = replace( first, "-", "_", "all" );
         var n = arrayLen( nsParts );
         if ( !structKeyExists( this, _first ) ) {
-            this[ _first ] = duplicate( this ).init(
-                ns = listAppend( variables._clj_ns, first, "." )
+            this[ _first ] = new j(
+                ns = listAppend( variables._clj_ns, first, "." ),
+                root = variables._clj_root
             );
         }
         if ( n > 1 ) {
@@ -175,7 +180,13 @@ component {
             return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
                                             arguments[4], arguments[5], arguments[6],
                                             arguments[7], arguments[8], arguments[9],
-                                            arguments[10], arguments[11]  );
+                                            arguments[10], arguments[11] );
+            break;
+        case 12:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
+                                            arguments[4], arguments[5], arguments[6],
+                                            arguments[7], arguments[8], arguments[9],
+                                            arguments[10], arguments[11], arguments[12] );
             break;
         default:
             throw "cfmljure cannot call that method with that many arguments.";
@@ -187,12 +198,12 @@ component {
         if ( !structKeyExists( variables, "_clj_require" ) ) {
             variables._clj_require = _var( "clojure.core", "require" );
         }
-        variables._clj_require.invoke( this.read( ns ) );
+        variables._clj_require.invoke( variables.read( ns ) );
     }
 
     private any function _var( string ns, string name ) {
         var args = [ ns, name ];
-        return variables._clj_var.invoke( javaCast( "null", 0 ), args.toArray() );
+        return variables._clj_root._clj_var.invoke( javaCast( "null", 0 ), args.toArray() );
     }
 
     public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
@@ -201,8 +212,10 @@ component {
             missingMethodName = right( missingMethodName, len( missingMethodName ) - 1 );
         }
         if ( !structKeyExists( this, missingMethodName ) ) {
-            this[ missingMethodName ] = duplicate( this ).init(
-                v = _var( variables._clj_ns, missingMethodName )
+            this[ missingMethodName ] = new j(
+                v = _var( variables._clj_ns, missingMethodName ),
+                ns = variables._clj_ns,
+                root = variables._clj_root
             );
         }
         var v = this[ missingMethodName ];

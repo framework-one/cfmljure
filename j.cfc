@@ -238,20 +238,9 @@ component {
         if ( ref ) {
             missingMethodName = right( missingMethodName, len( missingMethodName ) - 1 );
         }
-        missingMethodName = replaceNoCase( missingMethodName, "_qmark_", "?", "all" );
-        missingMethodName = replaceNoCase( missingMethodName, "_bang_", "!", "all" );
-        missingMethodName = replace( missingMethodName, "_", "-", "all" );
-        var key = " " & missingMethodName;
-        if ( !structKeyExists( variables, key ) ) {
-            variables[ key ] = new j(
-                v = _var( variables._clj_ns, missingMethodName ),
-                ns = variables._clj_ns,
-                root = variables._clj_root
-            );
-        }
-        var v = variables[ key ];
+        var v = _( missingMethodName );
         if ( ref ) {
-            return v;
+            return v._deref();
         } else {
             return v._call( argumentCollection = missingMethodArguments );
         }

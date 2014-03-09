@@ -101,7 +101,7 @@ component {
 
     public any function _( string name ) {
         if ( !structKeyExists( variables, name ) ) {
-            variables[ name ] = new cfmljure(
+            variables[ name ] = new j(
                 v = _var( variables._clj_ns, name ),
                 ns = variables._clj_ns,
                 root = variables._clj_root

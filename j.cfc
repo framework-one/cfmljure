@@ -99,13 +99,24 @@ component {
         return this;
     }
 
+    public any function _( string name ) {
+        if ( !structKeyExists( variables, name ) ) {
+            variables[ name ] = new cfmljure(
+                v = _var( variables._clj_ns, name ),
+                ns = variables._clj_ns,
+                root = variables._clj_root
+            );
+        }
+        return variables[ name ];
+    }
+
     public any function _deref() {
         return variables._clj_root.clojure.core.deref( variables._clj_v );
     }
 
-    public any function _install( string nsList ) {
-        var nsArray = listToArray( nsList );
-        for ( var ns in nsArray ) {
+    public any function _install( any nsList ) {
+        if ( !isArray( nsList ) ) nsList = listToArray( nsList );
+        for ( var ns in nsList ) {
             __install( trim( ns ) );
         }
     }

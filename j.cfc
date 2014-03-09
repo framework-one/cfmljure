@@ -100,14 +100,8 @@ component {
     }
 
     public any function _( string name ) {
-        if ( !structKeyExists( variables, name ) ) {
-            variables[ name ] = new j(
-                v = _var( variables._clj_ns, name ),
-                ns = variables._clj_ns,
-                root = variables._clj_root
-            );
-        }
-        return variables[ name ];
+        var v = __( name );
+        return v._deref();
     }
 
     public any function _deref() {
@@ -128,6 +122,17 @@ component {
 
     // helper functions:
 
+    private any function __( string name ) {
+        if ( !structKeyExists( variables, name ) ) {
+            variables[ name ] = new cfmljure(
+                v = _var( variables._clj_ns, name ),
+                ns = variables._clj_ns,
+                root = variables._clj_root
+            );
+        }
+        return variables[ name ];
+    }
+
     private any function __classes( string name, numeric n = 1 ) {
         var result = [ ];
         var type = createObject( "java", "java.lang." & name ).getClass();
@@ -141,18 +146,18 @@ component {
     }
 
     private any function ___install( array nsParts ) {
-        var first = nsParts[ 1 ];
-        var _first = replace( first, "-", "_", "all" );
+        var first = replace( nsParts[ 1 ], "-", "_", "all" );
+        var ns = replace( nsParts[ 1 ], "_", "-", "all" );
         var n = arrayLen( nsParts );
-        if ( !structKeyExists( this, _first ) ) {
-            this[ _first ] = new j(
-                ns = listAppend( variables._clj_ns, first, "." ),
+        if ( !structKeyExists( this, first ) ) {
+            this[ first ] = new cfmljure(
+                ns = listAppend( variables._clj_ns, ns, "." ),
                 root = variables._clj_root
             );
         }
         if ( n > 1 ) {
             arrayDeleteAt( nsParts, 1 );
-            this[ _first ].___install( nsParts );
+            this[ first ].___install( nsParts );
         }
     }
 
@@ -241,7 +246,7 @@ component {
         if ( ref ) {
             missingMethodName = right( missingMethodName, len( missingMethodName ) - 1 );
         }
-        var v = _( missingMethodName );
+        var v = __( missingMethodName );
         if ( ref ) {
             return v._deref();
         } else {

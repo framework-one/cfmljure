@@ -61,12 +61,12 @@ component {
             }
             // rebuild the classloader - not at all sketchy, honest!
             var threadProxy = createObject( "java", "java.lang.Thread" );
-            var appCL = threadProxy.getContextClassLoader();
+            var appCL = threadProxy.currentThread().getContextClassLoader();
             var newCL = createObject( "java", "java.net.URLClassLoader" ).init(
                 urls.toArray(), appCL
             );
             // hopefully this won't throw a security exception...
-            threadProxy.currentThread().setContextClassLoader( newCL );
+            //threadProxy.currentThread().setContextClassLoader( newCL );
             var out = createObject( "java", "java.lang.System" ).out;
             try {
                 var clj6 = newCL.loadClass( "clojure.java.api.Clojure" );
@@ -124,7 +124,7 @@ component {
 
     private any function __( string name ) {
         if ( !structKeyExists( variables, name ) ) {
-            variables[ name ] = new cfmljure(
+            variables[ name ] = new j(
                 v = _var( variables._clj_ns, name ),
                 ns = variables._clj_ns,
                 root = variables._clj_root
@@ -150,7 +150,7 @@ component {
         var ns = replace( nsParts[ 1 ], "_", "-", "all" );
         var n = arrayLen( nsParts );
         if ( !structKeyExists( this, first ) ) {
-            this[ first ] = new cfmljure(
+            this[ first ] = new j(
                 ns = listAppend( variables._clj_ns, ns, "." ),
                 root = variables._clj_root
             );

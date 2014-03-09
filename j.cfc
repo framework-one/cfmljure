@@ -229,7 +229,10 @@ component {
     }
 
     private any function _var( string ns, string name ) {
-        var args = [ ns, name ];
+        name = replace( replaceNoCase( replaceNoCase( name, "_qmark_", "?", "all" ),
+                                       "_bang_", "!", "all" ),
+                        "_", "-", "all" );
+        var args = [ lCase( ns ), lCase( name ) ];
         return variables._clj_root._clj_var.invoke( javaCast( "null", 0 ), args.toArray() );
     }
 

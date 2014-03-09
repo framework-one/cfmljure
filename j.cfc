@@ -74,7 +74,7 @@ component {
                 this._clj_var  = clj6.getMethod( "var", __classes( "Object", 2 ) );
                 this._clj_read = clj6.getMethod( "read", __classes( "String" ) );
             } catch ( any e ) {
-                var clj5 = newCL.loadClass( "clojure.lang." );
+                var clj5 = newCL.loadClass( "clojure.lang.RT" );
                 out.println( "Falling back to Clojure 1.5 or earlier" );
                 this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
                 this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );

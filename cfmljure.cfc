@@ -13,169 +13,263 @@ component {
 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 	See the License for the specific language governing permissions and
 	limitations under the License.
+
+See http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at-runtime for adding new JARs etc to the existing classpath!
 */
 	
 	// constructor
-	public any function init( any rt = 0, string ns = "" ) {
-		variables._ns = ns;
-		variables._refCache = { };
-		variables._nsCache = { };
-		if ( isObject( rt ) ) {
-			variables._rt = rt;
-		} else {
-			variables._rt = createObject( "java", "clojure.lang.RT" );
-			// set up the public API:
-			var publicNames = [ "call", "get", "install", "load", "ns" ];
-			for ( var name in publicNames ) {
-				this[ name ] = this[ "_" & name ];
-			}
-		}
-		return this;
-	}
-	
-	// public API: call(), get( string ref ), install( any namespaceList, struct target ), load( string fileList ), ns( string ref )
-	// also _( string name = "" ) to deference an item or to get a reference to named item
-	
-	// shorthand to retrieve the raw definition
-	public any function _( string name = "" ) {
-		return name == "" ? variables._ref.deref() : this._get( name )._();
-	}
-	
-	// explicit call method with up to ten positional arguments
-	public any function _call() {
-		switch ( arrayLen( arguments ) ) {
-		case 0:
-			return variables._ref.invoke();
-		case 1:
-			return variables._ref.invoke( arguments[1] );
-		case 2:
-			return variables._ref.invoke( arguments[1], arguments[2] );
-		case 3:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3] );
-		case 4:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4] );
-		case 5:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5] );
-		case 6:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
-											arguments[6] );
-		case 7:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
-											arguments[6], arguments[7] );
-		case 8:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
-											arguments[6], arguments[7], arguments[8] );
-		case 9:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
-											arguments[6], arguments[7], arguments[8], arguments[9] );
-		case 10:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
-											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10] );
-		case 11:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
-											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
-                                            arguments[11] );
-		case 12:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
-											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
-                                            arguments[11], arguments[12] );
+    public any function init( string project = "", numeric timeout = 300,
+                              string ns = "", any v = 0, any root = 0 ) {
+        if ( project != "" ) {
+            variables._clj_root = this;
+            variables._clj_ns = "";
+            var script = getTempFile( getTempDirectory(), "lein" );
+            var nl = server.separator.line;
+            var cmd = { };
+            if ( server.separator.file == "/" ) {
+                // *nix / Mac
+                cmd = { cd = "cd", run = "sh", arg = script };
+            } else {
+                // Windows
+                script &= ".bat";
+                cmd = { cd = "chdir", run = script, arg = "" };
+            }
+            fileWrite( script,
+                       "#cmd.cd# #project#" & nl &
+                       "lein classpath" & nl );
+            var classpath = "";
+            // TODO: not sure if this is ACF-compatible...
+            execute name="#cmd.run#" arguments="#cmd.arg#" variable="classpath" timeout="#timeout#";
+            // could be multiple lines so clean it up:
+            classpath = listLast( classpath, nl );
+            classpath = replace( classpath, nl, "" );
+            // turn the classpath into a URL list:
+            var classpathParts = listToArray( classpath, server.separator.path );
+            var urls = [ ];
+            for ( var part in classpathParts ) {
+                if ( !fileExists( part ) && !directoryExists( part ) ) {
+                    try {
+                        directoryCreate( part );
+                    } catch ( any e ) {
+                        // ignore and hope for the best - really!
+                    }
+                }
+                if ( !part.endsWith( ".jar" ) && !part.endsWith( server.separator.file ) ) {
+                    part &= server.separator.file;
+                }
+                // TODO: shortcut this...
+                var file = createObject( "java", "java.io.File" ).init( part );
+                arrayAppend( urls, file.toURI().toURL() );
+            }
+            // extend the classloader - not at all sketchy, honest!
+            var threadProxy = createObject( "java", "java.lang.Thread" );
+            var appCL = threadProxy.currentThread().getContextClassLoader();
+            var urlCLProxy = createObject( "java", "java.net.URLClassLoader" );
+            var addURL = urlCLProxy.getClass().getDeclaredMethod( "addURL", __classes( "URL", 1, "java.net" ) );
+            addUrl.setAccessible( true ); // hack to make it callable
+            for ( var newURL in urls.toArray() ) {
+                addURL.invoke( appCL, [ newURL ] );
+            }
+            var out = createObject( "java", "java.lang.System" ).out;
+            try {
+                var clj6 = appCL.loadClass( "clojure.java.api.Clojure" );
+                out.println( "Detected Clojure 1.6 or later" );
+                this._clj_var  = clj6.getMethod( "var", __classes( "Object", 2 ) );
+                this._clj_read = clj6.getMethod( "read", __classes( "String" ) );
+            } catch ( any e ) {
+                var clj5 = appCL.loadClass( "clojure.lang.RT" );
+                out.println( "Falling back to Clojure 1.5 or earlier" );
+                this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
+                this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
+            }
+            // promote API:
+            this.install = this._install;
+            this.read = this._read;
+            // auto-load clojure.core
+            _install( "clojure.core", this );
+        } else if ( !isSimpleValue( v ) ) {
+            variables._clj_root = root;
+            variables._clj_ns = ns;
+            variables._clj_v = v;
+            // allow deref on value:
+            this.deref = this._deref;
+        } else if ( ns != "" ) {
+            variables._clj_root = root;
+            variables._clj_ns = ns;
+        } else {
+            throw "cfmljure requires the path of a Leiningen project.";
+        }
+        return this;
+    }
+
+    public any function _( string name ) {
+        var v = __( name );
+        return v._deref();
+    }
+
+    public any function _deref() {
+        return variables._clj_root.clojure.core.deref( variables._clj_v );
+    }
+
+    public any function _install( any nsList, struct target ) {
+        if ( !isArray( nsList ) ) nsList = listToArray( nsList );
+        for ( var ns in nsList ) {
+            __install( trim( ns ), target );
+        }
+    }
+
+    public any function _read( string expr ) {
+        var args = [ expr ];
+        return variables._clj_root._clj_read.invoke( javaCast( "null", 0 ), args.toArray() );
+    }
+
+    // helper functions:
+
+    private any function __( string name ) {
+        if ( !structKeyExists( variables, name ) ) {
+            variables[ name ] = new cfmljure(
+                v = _var( variables._clj_ns, name ),
+                ns = variables._clj_ns,
+                root = variables._clj_root
+            );
+        }
+        return variables[ name ];
+    }
+
+    private any function __classes( string name, numeric n = 1, string prefix = "java.lang" ) {
+        var result = [ ];
+        var type = createObject( "java", prefix & "." & name ).getClass();
+        while ( n-- > 0 ) arrayAppend( result, type );
+        return result.toArray();
+    }
+
+    private any function __install( string ns, struct target ) {
+        _require( ns );
+        ___install( listToArray( ns, "." ), target );
+    }
+
+    private any function ___install( array nsParts, struct target ) {
+        var first = replace( nsParts[ 1 ], "-", "_", "all" );
+        var ns = replace( nsParts[ 1 ], "_", "-", "all" );
+        var n = arrayLen( nsParts );
+        if ( !structKeyExists( target, first ) ) {
+            target[ first ] = new cfmljure(
+                ns = listAppend( variables._clj_ns, ns, "." ),
+                root = variables._clj_root
+            );
+        }
+        if ( n > 1 ) {
+            arrayDeleteAt( nsParts, 1 );
+            target[ first ].___install( nsParts, target[ first ] );
+        }
+    }
+
+    private any function _call() {
+        switch ( arrayLen( arguments ) ) {
+        case 0:
+            return variables._clj_v.invoke();
+            break;
+        case 1:
+            return variables._clj_v.invoke( arguments[1] );
+            break;
+        case 2:
+            return variables._clj_v.invoke( arguments[1], arguments[2] );
+            break;
+        case 3:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3] );
+            break;
+        case 4:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
+                                            arguments[4] );
+            break;
+        case 5:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
+                                            arguments[4], arguments[5] );
+            break;
+        case 6:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
+                                            arguments[4], arguments[5], arguments[6] );
+            break;
+        case 7:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
+                                            arguments[4], arguments[5], arguments[6],
+                                            arguments[7] );
+            break;
+        case 8:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
+                                            arguments[4], arguments[5], arguments[6],
+                                            arguments[7], arguments[8] );
+            break;
+        case 9:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
+                                            arguments[4], arguments[5], arguments[6],
+                                            arguments[7], arguments[8], arguments[9] );
+            break;
+        case 10:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
+                                            arguments[4], arguments[5], arguments[6],
+                                            arguments[7], arguments[8], arguments[9],
+                                            arguments[10] );
+            break;
+        case 11:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
+                                            arguments[4], arguments[5], arguments[6],
+                                            arguments[7], arguments[8], arguments[9],
+                                            arguments[10], arguments[11] );
+            break;
+        case 12:
+            return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3],
+                                            arguments[4], arguments[5], arguments[6],
+                                            arguments[7], arguments[8], arguments[9],
+                                            arguments[10], arguments[11], arguments[12] );
+            break;
 		case 13:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+			return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
 											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
                                             arguments[11], arguments[12], arguments[13] );
 		case 14:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+			return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
 											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
                                             arguments[11], arguments[12], arguments[13], arguments[14] );
 		case 15:
-			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+			return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
 											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
                                             arguments[11], arguments[12], arguments[13], arguments[14], arguments[15] );
-		default:
-			throw "Unsupported call();";
-		}
-	}
-	
-	// tag this instance with a specific Clojure function definition so it can be called
-	public any function _def( any ref ) {
-		variables._ref = ref;
-		return this;
-	}
-	
-	// get a specific Clojure function
-	public any function _get( string ref ) {
-		if ( !structKeyExists( variables._refCache, ref ) ) {
-            if ( find( ".", ref ) ) throw "Qualified name #ref# unsupported in get()";
-            var encodes = [ "_qmark_", "_bang_", "_gt_", "_lt_" ];
-            var decodes = [ "?",       "!",      ">",    "<" ];
-            var n = encodes.len();
-            var fn = ref;
-            for ( var i = 1; i <= n; ++i ) {
-                fn = replaceNoCase( fn, encodes[i], decodes[i] );
-            }
-            fn = replace( fn, "_", "-", "all" );
-            var ns = replace( variables._ns, "_", "-", "all" );
-			var r = variables._rt.var( ns, fn );
-			variables._refCache[ref] = new cfmljure( variables._rt, variables._ns )._def( r );
-		}
-		return variables._refCache[ref];
-	}
-	
-	// install from a configuration into a target
-	public void function _install( any namespaceList, struct target ) {
-		var namespaces = isArray( namespaceList ) ? namespaceList : listToArray( namespaceList );
-		var implicitFileList = "";
-		var clj = this;
-		for ( var ns in namespaces ) {
-			ns = trim( ns );
-			var pair = variables._makePath( ns, target );
-			pair.s[pair.key] = clj._ns( ns );
-			// autoload based on namespaces:
-			if ( ns != "clojure.core" ) {
-				implicitFileList = listAppend( implicitFileList, "/" & replace( ns, ".", "/", "all" ) );
-			}
-		}
-		clj._load( implicitFileList );
-		target.clj = clj;
-	}
-	
-	// load a list of files
-	public void function _load( string fileList ) {
-		// clear the reference cache if we load any files
-		variables._refCache = { };
-		var files = listToArray( fileList );
-		for ( var file in files ) {
-			variables._rt.var( "clojure.core", "load" ).invoke( file );
-		}
-	}
-	
-	// set up a context for a Clojure namespace
-	public any function _ns( string ref ) {
-		if ( !structKeyExists( variables._nsCache, ref ) ) {
-			variables._nsCache[ref] = new cfmljure( variables._rt, ref ); 
-		}
-		return variables._nsCache[ref];
-	}
-	
-	// support dynamic calling of any method in the current namespace
-	public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
-		if ( left( missingMethodName, 1 ) == "_" ) {
-			return this._( lCase( right( missingMethodName, len( missingMethodName ) - 1 ) ) );
-		} else {
-			var ref = this._get( lCase( missingMethodName ) );
-			return ref._call( argumentCollection = missingMethodArguments );
-		}
-	}
-	
-	// helper for installing namespace paths
-	private struct function _makePath( string path, struct target ) {
-		var head = listFirst( path, "." );
-		if ( listLen( path, "." ) == 1 ) {
-			return { s = target, key = head };
-		} else {
-			if ( !structKeyExists( target, head ) ) target[head] = { };
-			return _makePath( listRest( path, "." ), target[head] );
-		}
-	}
-	
+        default:
+            throw "cfmljure cannot call that method with that many arguments.";
+            break;
+        }
+    }
+
+    private void function _require( string ns ) {
+        if ( !structKeyExists( variables, "_clj_require" ) ) {
+            variables._clj_require = _var( "clojure.core", "require" );
+        }
+        variables._clj_require.invoke( this.read( ns ) );
+    }
+
+    private any function _var( string ns, string name ) {
+        var encodes = [ "_qmark_", "_bang_", "_gt_", "_lt_", "_eq_", "_star_", "_" ];
+        var decodes = [ "?",       "!",      ">",    "<",    "=",    "*",      "-" ];
+        var n = encodes.len();
+        for ( var i = 1; i <= n; ++i ) {
+            name = replaceNoCase( name, encodes[i], decodes[i], "all" );
+        }
+        var args = [ lCase( ns ), lCase( name ) ];
+        return variables._clj_root._clj_var.invoke( javaCast( "null", 0 ), args.toArray() );
+    }
+
+    public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
+        var ref = left( missingMethodName, 1 ) == "_";
+        if ( ref ) {
+            missingMethodName = right( missingMethodName, len( missingMethodName ) - 1 );
+        }
+        var v = __( missingMethodName );
+        if ( ref ) {
+            return v._deref();
+        } else {
+            return v._call( argumentCollection = missingMethodArguments );
+        }
+    }
+
 }

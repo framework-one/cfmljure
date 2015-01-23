@@ -1,4 +1,4 @@
-( defproject task "1.0.0-SNAPSHOT"
+(defproject task "1.0.0-SNAPSHOT"
   :description "FIXME: write"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.apache.derby/derby "10.6.1.0"]

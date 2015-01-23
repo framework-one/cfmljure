@@ -1,3 +1,9 @@
+# Clojure and CFML Sitting in a tree
+
+cfmljure is a utility that lets you easily call Clojure code from CFML!
+
+It works by 
+
 # Installation
 
 To use cfmljure, you need the Clojure libraries. I think the easiest way to do that is with Leiningen, the Clojure build tool.

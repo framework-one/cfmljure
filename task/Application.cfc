@@ -1,8 +1,8 @@
-﻿component {
-	this.name = hash( getBaseTemplatePath() );
+component {
+	this.name = hash( expandPath( "." ) );
 	// cfmljure configuration:
 	config = {
-		project = 'task',
+		project = expandPath( '../clj/task' ),
 		ns = 'task.create, task.core'
 	};
 	
@@ -10,9 +10,12 @@
 	function onRequestStart() {
 		if ( !structKeyExists( application, 'clj') ||
 				( structKeyExists( URL, 'reload' ) && isBoolean( URL.reload ) && URL.reload ) ) {
+            writeOutput("<p>INITIALIZING THE CLOJURE RUNTIME</p>");
 			application.clj = new cfmljure( config.project );
-		}
-		application.clj.install( config, variables );
+        }
+        // better to install to an application variable once at startup
+        // but this makes it convenient for the example:
+        application.clj.install( config.ns, variables );
 	}
 	
 	function onRequest( string targetPath ) {

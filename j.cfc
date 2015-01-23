@@ -13,6 +13,8 @@ component {
 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 	See the License for the specific language governing permissions and
 	limitations under the License.
+
+See http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at-runtime for adding new JARs etc to the existing classpath!
 */
 	
 	// constructor

@@ -1,6 +1,6 @@
-﻿component {
+component {
 /*
-	Copyright (c) 2012, Sean Corfield
+	Copyright (c) 2012-2014, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -71,6 +71,26 @@
 		case 10:
 			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
 											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10] );
+		case 11:
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
+                                            arguments[11] );
+		case 12:
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
+                                            arguments[11], arguments[12] );
+		case 13:
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
+                                            arguments[11], arguments[12], arguments[13] );
+		case 14:
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
+                                            arguments[11], arguments[12], arguments[13], arguments[14] );
+		case 15:
+			return variables._ref.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
+                                            arguments[11], arguments[12], arguments[13], arguments[14], arguments[15] );
 		default:
 			throw "Unsupported call();";
 		}
@@ -86,7 +106,14 @@
 	public any function _get( string ref ) {
 		if ( !structKeyExists( variables._refCache, ref ) ) {
             if ( find( ".", ref ) ) throw "Qualified name #ref# unsupported in get()";
-            var fn = replace( ref, "_", "-", "all" );
+            var encodes = [ "_qmark_", "_bang_", "_gt_", "_lt_" ];
+            var decodes = [ "?",       "!",      ">",    "<" ];
+            var n = encodes.len();
+            var fn = ref;
+            for ( var i = 1; i <= n; ++i ) {
+                fn = replaceNoCase( fn, encodes[i], decodes[i] );
+            }
+            fn = replace( fn, "_", "-", "all" );
             var ns = replace( variables._ns, "_", "-", "all" );
 			var r = variables._rt.var( ns, fn );
 			variables._refCache[ref] = new cfmljure( variables._rt, variables._ns )._def( r );

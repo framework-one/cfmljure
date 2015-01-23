@@ -61,22 +61,23 @@ See http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at
                 var file = createObject( "java", "java.io.File" ).init( part );
                 arrayAppend( urls, file.toURI().toURL() );
             }
-            // rebuild the classloader - not at all sketchy, honest!
+            // extend the classloader - not at all sketchy, honest!
             var threadProxy = createObject( "java", "java.lang.Thread" );
             var appCL = threadProxy.currentThread().getContextClassLoader();
-            var newCL = createObject( "java", "java.net.URLClassLoader" ).init(
-                urls.toArray(), appCL
-            );
-            // hopefully this won't throw a security exception...
-            //threadProxy.currentThread().setContextClassLoader( newCL );
+            var urlCLProxy = createObject( "java", "java.net.URLClassLoader" );
+            var addURL = urlCLProxy.getClass().getDeclaredMethod( "addURL", __classes( "URL", 1, "java.net" ) );
+            addUrl.setAccessible( true ); // hack to make it callable
+            for ( var newURL in urls.toArray() ) {
+                addURL.invoke( appCL, [ newURL ] );
+            }
             var out = createObject( "java", "java.lang.System" ).out;
             try {
-                var clj6 = newCL.loadClass( "clojure.java.api.Clojure" );
+                var clj6 = appCL.loadClass( "clojure.java.api.Clojure" );
                 out.println( "Detected Clojure 1.6 or later" );
                 this._clj_var  = clj6.getMethod( "var", __classes( "Object", 2 ) );
                 this._clj_read = clj6.getMethod( "read", __classes( "String" ) );
             } catch ( any e ) {
-                var clj5 = newCL.loadClass( "clojure.lang.RT" );
+                var clj5 = appCL.loadClass( "clojure.lang.RT" );
                 out.println( "Falling back to Clojure 1.5 or earlier" );
                 this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
                 this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
@@ -85,7 +86,7 @@ See http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at
             this.install = this._install;
             this.read = this._read;
             // auto-load clojure.core
-            _install( "clojure.core" );
+            _install( "clojure.core", this );
         } else if ( !isSimpleValue( v ) ) {
             variables._clj_root = root;
             variables._clj_ns = ns;
@@ -110,10 +111,10 @@ See http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at
         return variables._clj_root.clojure.core.deref( variables._clj_v );
     }
 
-    public any function _install( any nsList ) {
+    public any function _install( any nsList, struct target ) {
         if ( !isArray( nsList ) ) nsList = listToArray( nsList );
         for ( var ns in nsList ) {
-            __install( trim( ns ) );
+            __install( trim( ns ), target );
         }
     }
 
@@ -126,7 +127,7 @@ See http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at
 
     private any function __( string name ) {
         if ( !structKeyExists( variables, name ) ) {
-            variables[ name ] = new j(
+            variables[ name ] = new cfmljure(
                 v = _var( variables._clj_ns, name ),
                 ns = variables._clj_ns,
                 root = variables._clj_root
@@ -135,31 +136,31 @@ See http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at
         return variables[ name ];
     }
 
-    private any function __classes( string name, numeric n = 1 ) {
+    private any function __classes( string name, numeric n = 1, string prefix = "java.lang" ) {
         var result = [ ];
-        var type = createObject( "java", "java.lang." & name ).getClass();
+        var type = createObject( "java", prefix & "." & name ).getClass();
         while ( n-- > 0 ) arrayAppend( result, type );
         return result.toArray();
     }
 
-    private any function __install( string ns ) {
+    private any function __install( string ns, struct target ) {
         _require( ns );
-        ___install( listToArray( ns, "." ) );
+        ___install( listToArray( ns, "." ), target );
     }
 
-    private any function ___install( array nsParts ) {
+    private any function ___install( array nsParts, struct target ) {
         var first = replace( nsParts[ 1 ], "-", "_", "all" );
         var ns = replace( nsParts[ 1 ], "_", "-", "all" );
         var n = arrayLen( nsParts );
-        if ( !structKeyExists( this, first ) ) {
-            this[ first ] = new j(
+        if ( !structKeyExists( target, first ) ) {
+            target[ first ] = new cfmljure(
                 ns = listAppend( variables._clj_ns, ns, "." ),
                 root = variables._clj_root
             );
         }
         if ( n > 1 ) {
             arrayDeleteAt( nsParts, 1 );
-            this[ first ].___install( nsParts );
+            target[ first ].___install( nsParts, target[ first ] );
         }
     }
 
@@ -222,6 +223,18 @@ See http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at
                                             arguments[7], arguments[8], arguments[9],
                                             arguments[10], arguments[11], arguments[12] );
             break;
+		case 13:
+			return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
+                                            arguments[11], arguments[12], arguments[13] );
+		case 14:
+			return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
+                                            arguments[11], arguments[12], arguments[13], arguments[14] );
+		case 15:
+			return variables._clj_v.invoke( arguments[1], arguments[2], arguments[3], arguments[4], arguments[5],
+											arguments[6], arguments[7], arguments[8], arguments[9], arguments[10],
+                                            arguments[11], arguments[12], arguments[13], arguments[14], arguments[15] );
         default:
             throw "cfmljure cannot call that method with that many arguments.";
             break;
@@ -236,9 +249,12 @@ See http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at
     }
 
     private any function _var( string ns, string name ) {
-        name = replace( replaceNoCase( replaceNoCase( name, "_qmark_", "?", "all" ),
-                                       "_bang_", "!", "all" ),
-                        "_", "-", "all" );
+        var encodes = [ "_qmark_", "_bang_", "_gt_", "_lt_", "_eq_", "_star_", "_" ];
+        var decodes = [ "?",       "!",      ">",    "<",    "=",    "*",      "-" ];
+        var n = encodes.len();
+        for ( var i = 1; i <= n; ++i ) {
+            name = replaceNoCase( name, encodes[i], decodes[i], "all" );
+        }
         var args = [ lCase( ns ), lCase( name ) ];
         return variables._clj_root._clj_var.invoke( javaCast( "null", 0 ), args.toArray() );
     }

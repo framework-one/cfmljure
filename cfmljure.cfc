@@ -1,6 +1,6 @@
 component {
 /*
-	Copyright (c) 2012-2014, Sean Corfield
+	Copyright (c) 2012-2015, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@ component {
 	See the License for the specific language governing permissions and
 	limitations under the License.
 
-See http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at-runtime for adding new JARs etc to the existing classpath!
 */
 	
 	// constructor

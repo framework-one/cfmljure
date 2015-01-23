@@ -6,3 +6,5 @@ WEB-INF/*
 clj/task/derby.log
 /clj/cfml/target/stale/extract-native.dependencies
 /clj/task/target/stale/extract-native.dependencies
+/clj/cfml/.lein-failures
+/clj/task/.lein-failures

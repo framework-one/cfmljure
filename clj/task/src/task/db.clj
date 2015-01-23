@@ -2,5 +2,5 @@
 
 (def db {:classname "org.apache.derby.jdbc.EmbeddedDriver"
          :subprotocol "derby"
-         :subname "taskdb"
+         :subname "cfmljuretaskdb"
          :create true})

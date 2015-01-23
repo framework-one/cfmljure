@@ -1,5 +1,6 @@
 component {
 	this.name = hash( expandPath( "." ) );
+    this.mappings["/cfmljure_root"] = expandPath( ".." );
 	// cfmljure configuration:
 	config = {
 		project = expandPath( '../clj/task' ),
@@ -11,7 +12,7 @@ component {
 		if ( !structKeyExists( application, 'clj') ||
 				( structKeyExists( URL, 'reload' ) && isBoolean( URL.reload ) && URL.reload ) ) {
             writeOutput("<p>INITIALIZING THE CLOJURE RUNTIME</p>");
-			application.clj = new cfmljure( config.project );
+			application.clj = new cfmljure_root.cfmljure( config.project );
         }
         // better to install to an application variable once at startup
         // but this makes it convenient for the example:

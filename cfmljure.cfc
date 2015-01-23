@@ -18,6 +18,7 @@ component {
 	
 	// constructor
     public any function init( string project = "", numeric timeout = 300,
+                              string lein = "lein", // to allow default to be overridden
                               string ns = "", any v = 0, any root = 0 ) {
         if ( project != "" ) {
             variables._clj_root = this;
@@ -35,7 +36,7 @@ component {
             }
             fileWrite( script,
                        "#cmd.cd# #project#" & nl &
-                       "lein classpath" & nl );
+                       "#lein# classpath" & nl );
             var classpath = "";
             // TODO: not sure if this is ACF-compatible...
             execute name="#cmd.run#" arguments="#cmd.arg#" variable="classpath" timeout="#timeout#";

@@ -26,10 +26,11 @@ component {
             variables._clj_root = this;
             variables._clj_ns = "";
             var script = getTempFile( getTempDirectory(), "lein" );
-            var jlSystem = createObject("java", "java.lang.System");
-            var nl = jlSystem.getProperty("line.separator");
+            var javaLangSystem = createObject( "java", "java.lang.System" );
+            var nl = javaLangSystem.getProperty( "line.separator" );
+            var fs = javaLangSystem.getProperty( "file.separator" );
             var cmd = { };
-            if ( jlSystem.getProperty("file.separator") == "/" ) {
+            if ( fs == "/" ) {
                 // *nix / Mac
                 cmd = { cd = "cd", run = "sh", arg = script };
             } else {
@@ -41,12 +42,12 @@ component {
                        "#cmd.cd# #project#" & nl &
                        "#lein# classpath" & nl );
             var classpath = "";
-            cfexecute(name="#cmd.run#", arguments="#cmd.arg#", variable="classpath", timeout="#timeout#");
+            cfexecute( name="#cmd.run#", arguments="#cmd.arg#", variable="classpath", timeout="#timeout#" );
             // could be multiple lines so clean it up:
             classpath = listLast( classpath, nl );
             classpath = replace( classpath, nl, "" );
             // turn the classpath into a URL list:
-            var classpathParts = listToArray( classpath, jlSystem.getProperty("path.separator") );
+            var classpathParts = listToArray( classpath, javaLangSystem.getProperty( "path.separator" ) );
             var urls = [ ];
             for ( var part in classpathParts ) {
                 if ( !fileExists( part ) && !directoryExists( part ) ) {
@@ -56,8 +57,8 @@ component {
                         // ignore and hope for the best - really!
                     }
                 }
-                if ( !part.endsWith( ".jar" ) && !part.endsWith( jlSystem.getProperty("file.separator") ) ) {
-                    part &= jlSystem.getProperty("file.separator");
+                if ( !part.endsWith( ".jar" ) && !part.endsWith( fs ) ) {
+                    part &= fs;
                 }
                 // TODO: shortcut this...
                 var file = createObject( "java", "java.io.File" ).init( part );
@@ -72,7 +73,7 @@ component {
             for ( var newURL in urls.toArray() ) {
                 addURL.invoke( appCL, [ newURL ] );
             }
-            var out = createObject( "java", "java.lang.System" ).out;
+            var out = javaLangSystem.out;
             try {
                 var clj6 = appCL.loadClass( "clojure.java.api.Clojure" );
                 out.println( "Detected Clojure 1.6 or later" );
@@ -152,13 +153,13 @@ component {
     }
 
     public any function __classes( string name, numeric n = 1, string prefix = "java.lang" ) {
-        var result = createObject("java", "java.util.ArrayList").init();
+        var result = createObject( "java", "java.util.ArrayList" ).init();
         var type = createObject( "java", prefix & "." & name ).getClass();
         while ( n-- > 0 ) result.add( type );
-        var classType = createObject("java", "java.lang.Class");
-        var arrayType = createObject("java", "java.lang.reflect.Array");
-        var classArray = arrayType.newInstance(classType.getClass(), result.size());
-        return result.toArray(classArray); 
+        var classType = createObject( "java", "java.lang.Class" );
+        var arrayType = createObject( "java", "java.lang.reflect.Array" );
+        var arrayInstance = arrayType.newInstance( classType.getClass(), result.size() );
+        return result.toArray( arrayInstance );
     }
 
     public any function __install( string ns, struct target ) {
@@ -182,77 +183,77 @@ component {
         }
     }
 
-    public any function _call(methodArgs) {
-        switch ( arrayLen( methodArgs ) ) {
+    public any function _call( any argsArray ) {
+        switch ( arrayLen( argsArray ) ) {
         case 0:
             return variables._clj_v.invoke();
             break;
         case 1:
-            return variables._clj_v.invoke( methodArgs[1] );
+            return variables._clj_v.invoke( argsArray[1] );
             break;
         case 2:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2] );
             break;
         case 3:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3] );
             break;
         case 4:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3],
-                                            methodArgs[4] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                                            argsArray[4] );
             break;
         case 5:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3],
-                                            methodArgs[4], methodArgs[5] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                                            argsArray[4], argsArray[5] );
             break;
         case 6:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3],
-                                            methodArgs[4], methodArgs[5], methodArgs[6] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                                            argsArray[4], argsArray[5], argsArray[6] );
             break;
         case 7:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3],
-                                            methodArgs[4], methodArgs[5], methodArgs[6],
-                                            methodArgs[7] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                                            argsArray[4], argsArray[5], argsArray[6],
+                                            argsArray[7] );
             break;
         case 8:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3],
-                                            methodArgs[4], methodArgs[5], methodArgs[6],
-                                            methodArgs[7], methodArgs[8] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                                            argsArray[4], argsArray[5], argsArray[6],
+                                            argsArray[7], argsArray[8] );
             break;
         case 9:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3],
-                                            methodArgs[4], methodArgs[5], methodArgs[6],
-                                            methodArgs[7], methodArgs[8], methodArgs[9] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                                            argsArray[4], argsArray[5], argsArray[6],
+                                            argsArray[7], argsArray[8], argsArray[9] );
             break;
         case 10:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3],
-                                            methodArgs[4], methodArgs[5], methodArgs[6],
-                                            methodArgs[7], methodArgs[8], methodArgs[9],
-                                            methodArgs[10] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                                            argsArray[4], argsArray[5], argsArray[6],
+                                            argsArray[7], argsArray[8], argsArray[9],
+                                            argsArray[10] );
             break;
         case 11:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3],
-                                            methodArgs[4], methodArgs[5], methodArgs[6],
-                                            methodArgs[7], methodArgs[8], methodArgs[9],
-                                            methodArgs[10], methodArgs[11] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                                            argsArray[4], argsArray[5], argsArray[6],
+                                            argsArray[7], argsArray[8], argsArray[9],
+                                            argsArray[10], argsArray[11] );
             break;
         case 12:
-            return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3],
-                                            methodArgs[4], methodArgs[5], methodArgs[6],
-                                            methodArgs[7], methodArgs[8], methodArgs[9],
-                                            methodArgs[10], methodArgs[11], methodArgs[12] );
+            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                                            argsArray[4], argsArray[5], argsArray[6],
+                                            argsArray[7], argsArray[8], argsArray[9],
+                                            argsArray[10], argsArray[11], argsArray[12] );
             break;
 		case 13:
-			return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4], methodArgs[5],
-											methodArgs[6], methodArgs[7], methodArgs[8], methodArgs[9], methodArgs[10],
-                                            methodArgs[11], methodArgs[12], methodArgs[13] );
+			return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
+                                            argsArray[11], argsArray[12], argsArray[13] );
 		case 14:
-			return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4], methodArgs[5],
-											methodArgs[6], methodArgs[7], methodArgs[8], methodArgs[9], methodArgs[10],
-                                            methodArgs[11], methodArgs[12], methodArgs[13], methodArgs[14] );
+			return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
+                                            argsArray[11], argsArray[12], argsArray[13], argsArray[14] );
 		case 15:
-			return variables._clj_v.invoke( methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4], methodArgs[5],
-											methodArgs[6], methodArgs[7], methodArgs[8], methodArgs[9], methodArgs[10],
-                                            methodArgs[11], methodArgs[12], methodArgs[13], methodArgs[14], methodArgs[15] );
+			return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
+                                            argsArray[11], argsArray[12], argsArray[13], argsArray[14], argsArray[15] );
         default:
             throw "cfmljure cannot call that method with that many arguments.";
             break;

@@ -1,5 +1,5 @@
 component {
-    variables._cfmljure_version = "0.1.1";
+    variables._cfmljure_version = "0.2.0";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -20,7 +20,8 @@ component {
 	// constructor
     public any function init( string project = "", numeric timeout = 300,
                               string lein = "lein", // to allow default to be overridden
-                              string ns = "", any v = 0, any root = 0 ) {
+                              string ns = "", any root = 0 ) {
+        variables.refCache = { };
         if ( project != "" ) {
             variables._clj_root = this;
             variables._clj_ns = "";
@@ -91,12 +92,6 @@ component {
             this.toClojure = this._toClojure;
             // auto-load clojure.core and clojure.walk for clients
             _install( "clojure.core, clojure.walk", this );
-        } else if ( !isSimpleValue( v ) ) {
-            variables._clj_root = root;
-            variables._clj_ns = ns;
-            variables._clj_v = v;
-            // allow deref on value:
-            this.deref = this._deref;
         } else if ( ns != "" ) {
             variables._clj_root = root;
             variables._clj_ns = ns;
@@ -107,12 +102,7 @@ component {
     }
 
     public any function _( string name ) {
-        var v = __( name );
-        return v._deref();
-    }
-
-    public any function _deref() {
-        return variables._clj_root.clojure.core.deref( variables._clj_v );
+        return __( name, true );
     }
 
     public any function _install( any nsList, struct target ) {
@@ -140,15 +130,15 @@ component {
 
     // helper functions:
 
-    public any function __( string name ) {
-        if ( !structKeyExists( variables, name ) ) {
-            variables[ name ] = new cfmljure(
-                v = _var( variables._clj_ns, name ),
-                ns = variables._clj_ns,
-                root = variables._clj_root
-            );
+    public any function __( string name, boolean autoDeref ) {
+        if ( !structKeyExists( variables.refCache, name ) ) {
+            if ( autoDeref ) {
+                variables.refCache[ name ] = variables._clj_root.clojure.core.deref( _var( variables._clj_ns, name ) );
+            } else {
+                variables.refCache[ name ] = _var( variables._clj_ns, name );
+            }
         }
-        return variables[ name ];
+        return variables.refCache[ name ];
     }
 
     public any function __classes( string name, numeric n = 1, string prefix = "java.lang" ) {
@@ -182,75 +172,75 @@ component {
         }
     }
 
-    public any function _call( any argsArray ) {
+    public any function _call( any v, any argsArray ) {
         switch ( arrayLen( argsArray ) ) {
         case 0:
-            return variables._clj_v.invoke();
+            return v.invoke();
             break;
         case 1:
-            return variables._clj_v.invoke( argsArray[1] );
+            return v.invoke( argsArray[1] );
             break;
         case 2:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2] );
+            return v.invoke( argsArray[1], argsArray[2] );
             break;
         case 3:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3] );
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3] );
             break;
         case 4:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4] );
             break;
         case 5:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5] );
             break;
         case 6:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6] );
             break;
         case 7:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7] );
             break;
         case 8:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7], argsArray[8] );
             break;
         case 9:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7], argsArray[8], argsArray[9] );
             break;
         case 10:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7], argsArray[8], argsArray[9],
                                             argsArray[10] );
             break;
         case 11:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7], argsArray[8], argsArray[9],
                                             argsArray[10], argsArray[11] );
             break;
         case 12:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7], argsArray[8], argsArray[9],
                                             argsArray[10], argsArray[11], argsArray[12] );
             break;
 		case 13:
-			return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
 											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
                                             argsArray[11], argsArray[12], argsArray[13] );
 		case 14:
-			return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
 											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
                                             argsArray[11], argsArray[12], argsArray[13], argsArray[14] );
 		case 15:
-			return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
 											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
                                             argsArray[11], argsArray[12], argsArray[13], argsArray[14], argsArray[15] );
         default:
@@ -278,15 +268,10 @@ component {
     }
 
     public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
-        var ref = left( missingMethodName, 1 ) == "_";
-        if ( ref ) {
-            missingMethodName = right( missingMethodName, len( missingMethodName ) - 1 );
-        }
-        var v = __( missingMethodName );
-        if ( ref ) {
-            return v._deref();
+        if ( left( missingMethodName, 1 ) == "_" ) {
+            return __( right( missingMethodName, len( missingMethodName ) - 1 ), true );
         } else {
-            return v._call( missingMethodArguments );
+            return _call( __( missingMethodName, false ), missingMethodArguments );
         }
     }
 

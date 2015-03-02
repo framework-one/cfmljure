@@ -1,5 +1,5 @@
 component {
-    variables._cfmljure_version = "0.2.0";
+    variables._cfmljure_version = "0.2.1";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -86,12 +86,12 @@ component {
                 this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
             }
             // promote API:
-            this.install = this._install;
-            this.read = this._read;
-            this.toCFML = this._toCFML;
-            this.toClojure = this._toClojure;
+            this.install = this.__install;
+            this.read = this.__read;
+            this.toCFML = this.__toCFML;
+            this.toClojure = this.__toClojure;
             // auto-load clojure.core and clojure.walk for clients
-            _install( "clojure.core, clojure.walk", this );
+            __install( "clojure.core, clojure.walk", this );
         } else if ( ns != "" ) {
             variables._clj_root = root;
             variables._clj_ns = ns;
@@ -105,23 +105,23 @@ component {
         return __( name, true );
     }
 
-    public any function _install( any nsList, struct target ) {
+    public any function __install( any nsList, struct target ) {
         if ( !isArray( nsList ) ) nsList = listToArray( nsList );
         for ( var ns in nsList ) {
-            __install( trim( ns ), target );
+            __1_install( trim( ns ), target );
         }
     }
 
-    public any function _read( string expr ) {
+    public any function __read( string expr ) {
         var args = [ expr ];
         return variables._clj_root._clj_read.invoke( javaCast( "null", 0 ), args.toArray() );
     }
 
-    public any function _toCFML( any expr ) {
+    public any function __toCFML( any expr ) {
         return this.clojure.walk.stringify_keys( expr );
     }
 
-    public any function _toClojure( any expr ) {
+    public any function __toClojure( any expr ) {
         return this.clojure.walk.keywordize_keys(
             isStruct( expr ) ?
                 this.clojure.core.into( this.clojure.core.hash_map(), expr ) : expr
@@ -133,9 +133,9 @@ component {
     public any function __( string name, boolean autoDeref ) {
         if ( !structKeyExists( variables.refCache, name ) ) {
             if ( autoDeref ) {
-                variables.refCache[ name ] = variables._clj_root.clojure.core.deref( _var( variables._clj_ns, name ) );
+                variables.refCache[ name ] = variables._clj_root.clojure.core.deref( __var( variables._clj_ns, name ) );
             } else {
-                variables.refCache[ name ] = _var( variables._clj_ns, name );
+                variables.refCache[ name ] = __var( variables._clj_ns, name );
             }
         }
         return variables.refCache[ name ];
@@ -151,12 +151,12 @@ component {
         return result.toArray( arrayInstance );
     }
 
-    public any function __install( string ns, struct target ) {
-        _require( ns );
-        ___install( listToArray( ns, "." ), target );
+    public any function __1_install( string ns, struct target ) {
+        __require( ns );
+        __2_install( listToArray( ns, "." ), target );
     }
 
-    public any function ___install( array nsParts, struct target ) {
+    public any function __2_install( array nsParts, struct target ) {
         var first = replace( nsParts[ 1 ], "-", "_", "all" );
         var ns = replace( nsParts[ 1 ], "_", "-", "all" );
         var n = arrayLen( nsParts );
@@ -168,11 +168,11 @@ component {
         }
         if ( n > 1 ) {
             arrayDeleteAt( nsParts, 1 );
-            target[ first ].___install( nsParts, target[ first ] );
+            target[ first ].__2_install( nsParts, target[ first ] );
         }
     }
 
-    public any function _call( any v, any argsArray ) {
+    public any function __call( any v, any argsArray ) {
         switch ( arrayLen( argsArray ) ) {
         case 0:
             return v.invoke();
@@ -249,14 +249,14 @@ component {
         }
     }
 
-    public void function _require( string ns ) {
+    public void function __require( string ns ) {
         if ( !structKeyExists( variables, "_clj_require" ) ) {
-            variables._clj_require = _var( "clojure.core", "require" );
+            variables._clj_require = __var( "clojure.core", "require" );
         }
         variables._clj_require.invoke( this.read( ns ) );
     }
 
-    public any function _var( string ns, string name ) {
+    public any function __var( string ns, string name ) {
         var encodes = [ "_qmark_", "_bang_", "_gt_", "_lt_", "_eq_", "_star_", "_" ];
         var decodes = [ "?",       "!",      ">",    "<",    "=",    "*",      "-" ];
         var n = encodes.len();
@@ -271,7 +271,7 @@ component {
         if ( left( missingMethodName, 1 ) == "_" ) {
             return __( right( missingMethodName, len( missingMethodName ) - 1 ), true );
         } else {
-            return _call( __( missingMethodName, false ), missingMethodArguments );
+            return __call( __( missingMethodName, false ), missingMethodArguments );
         }
     }
 

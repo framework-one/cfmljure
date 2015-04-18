@@ -1,5 +1,5 @@
 component {
-    variables._cfmljure_version = "0.2.1";
+    variables._cfmljure_version = "0.2.2";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -40,7 +40,7 @@ component {
             }
             fileWrite( script,
                        "#cmd.cd# #project#" & nl &
-                       "#lein# classpath" & nl );
+                       "#lein# with-profile production do clean, classpath" & nl );
             var classpath = "";
             cfexecute( name="#cmd.run#", arguments="#cmd.arg#", variable="classpath", timeout="#timeout#" );
             // could be multiple lines so clean it up:

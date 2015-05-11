@@ -1,5 +1,5 @@
 component {
-    variables._cfmljure_version = "0.2.2";
+    variables._cfmljure_version = "0.2.3";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -16,7 +16,7 @@ component {
 	limitations under the License.
 
 */
-	
+
 	// constructor
     public any function init( string project = "", numeric timeout = 300,
                               string lein = "lein", // to allow default to be overridden
@@ -40,7 +40,7 @@ component {
             }
             fileWrite( script,
                        "#cmd.cd# #project#" & nl &
-                       "#lein# with-profile production do clean, classpath" & nl );
+                       "#lein# with-profile production do clean, compile, classpath" & nl );
             var classpath = "";
             cfexecute( name="#cmd.run#", arguments="#cmd.arg#", variable="classpath", timeout="#timeout#" );
             // could be multiple lines so clean it up:

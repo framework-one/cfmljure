@@ -1,5 +1,6 @@
 component {
-    variables._cfmljure_version = "0.2.3";
+    variables._fw1_version = "3.5.0_snapshot";
+    variables._cfmljure_version = "0.2.4_snapshot";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -25,24 +26,70 @@ component {
         if ( project != "" ) {
             variables._clj_root = this;
             variables._clj_ns = "";
-            var script = getTempFile( getTempDirectory(), "lein" );
             var javaLangSystem = createObject( "java", "java.lang.System" );
+            variables.out = javaLangSystem.out;
             var nl = javaLangSystem.getProperty( "line.separator" );
             var fs = javaLangSystem.getProperty( "file.separator" );
+            var nixLike = fs == "/";
+            var script = "";
             var cmd = { };
-            if ( fs == "/" ) {
+            var tmpDir = "";
+            if ( nixLike ) {
                 // *nix / Mac
-                cmd = { cd = "cd", run = "sh", arg = script };
+                tmpDir = "/tmp";
+                script = getTempFile( tmpDir, "lein" );
+                cmd = {
+                    cd = "cd", run = "/bin/sh", arg = script,
+                    // make sure we are not trying to run under root account!
+                    preflightCmd = "if [ `id -u` -eq 0 ]; then >&2 echo 'DO NOT RUN CFML OR CFMLJURE AS ROOT!'; exit 1; fi#nl#",
+                    exitCmd = "exit 0#nl#"
+                };
+                // ensure Servlet container's options do not affect Leiningen:
+                lein = "JAVA_OPTS= " & lein;
             } else {
                 // Windows
+                tmpDir = "/temp";
+                script = getTempFile( tmpDir, "lein" );
                 script &= ".bat";
-                cmd = { cd = "chdir", run = script, arg = "" };
+                cmd = {
+                    cd = "chdir", run = script, arg = "",
+                    preflightCmd = "", exitCmd = ""
+                };
             }
-            fileWrite( script,
-                       "#cmd.cd# #project#" & nl &
-                       "#lein# with-profile production do clean, compile, classpath" & nl );
+            variables.__lockFile = tmpDir & "/cfmljure.lock";
+            fileWrite(
+                script,
+                "#cmd.cd# #project#" & nl &
+                    cmd.preflightCmd &
+                    "#lein# with-profile production do clean, compile, classpath" & nl &
+                    cmd.exitCmd
+            );
             var classpath = "";
-            cfexecute( name="#cmd.run#", arguments="#cmd.arg#", variable="classpath", timeout="#timeout#" );
+            var errors = "";
+            __acquireLock( variables.__lockFile );
+            try {
+                cfexecute(
+                    name="#cmd.run#", arguments="#cmd.arg#",
+                    variable="classpath", errorVariable="errors",
+                    timeout="#timeout#" );
+            } catch ( any e ) {
+                __releaseLock( variables.__lockFile );
+                if ( structKeyExists( URL, "cfmljure" ) &&
+                     URL.cfmljure == "abortOnFailure" ) {
+                    writeDump( var = cmd, label = "Unable to cfexecute this script" );
+                    if ( !isNull( classpath ) ) writeDump( var = classpath, label = "Leiningen stdout" );
+                    if ( !isNull( errors ) ) writeDump( var = errors, label = "Leiningen stderr" );
+                    writeDump( var = e, label = "Full stack trace" );
+                    abort;
+                }
+                throw e;
+            }
+            __releaseLock( variables.__lockFile );
+            try {
+                fileDelete( script );
+            } catch ( any e ) {
+                variables.out.println( "Unable to delete #script#!!!" );
+            }
             // could be multiple lines so clean it up:
             classpath = listLast( classpath, nl );
             classpath = replace( classpath, nl, "" );
@@ -73,15 +120,14 @@ component {
             for ( var newURL in urls.toArray() ) {
                 addURL.invoke( appCL, [ newURL ] );
             }
-            var out = javaLangSystem.out;
             try {
                 var clj6 = appCL.loadClass( "clojure.java.api.Clojure" );
-                out.println( "Detected Clojure 1.6 or later" );
+                variables.out.println( "Detected Clojure 1.6 or later" );
                 this._clj_var  = clj6.getMethod( "var", __classes( "Object", 2 ) );
                 this._clj_read = clj6.getMethod( "read", __classes( "String" ) );
             } catch ( any e ) {
                 var clj5 = appCL.loadClass( "clojure.lang.RT" );
-                out.println( "Falling back to Clojure 1.5 or earlier" );
+                variables.out.println( "Falling back to Clojure 1.5 or earlier" );
                 this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
                 this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
             }
@@ -105,10 +151,34 @@ component {
         return __( name, true );
     }
 
+    private void function __acquireLock( string lockFile ) {
+        var waits = 0;
+        while ( fileExists( lockFile ) ) {
+            if ( waits > 3 ) throw "cfmljure waited a long time for #lockFile# to be deleted - perhaps you should delete it manually and try again?";
+            variables.out.println( "Waiting for #lockFile# to be deleted..." );
+            sleep( ( 15 * randRange( 1, 15 ) ) * 1000 );
+            ++waits;
+        }
+        fileWriteLine( lockFile, "" );
+    }
+
+    private void function __releaseLock( string lockFile ) {
+        try {
+            fileDelete( lockFile );
+        } catch ( any e ) {
+            variables.out.println( "Unable to delete #lockFile#!!!" );
+        }
+    }
+
     public any function __install( any nsList, struct target ) {
         if ( !isArray( nsList ) ) nsList = listToArray( nsList );
-        for ( var ns in nsList ) {
-            __1_install( trim( ns ), target );
+        try {
+            __acquireLock( variables.__lockFile );
+            for ( var ns in nsList ) {
+                __1_install( trim( ns ), target );
+            }
+        } finally {
+            __releaseLock( variables.__lockFile );
         }
     }
 

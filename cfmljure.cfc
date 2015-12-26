@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.5.0_snapshot";
-    variables._cfmljure_version = "0.2.4_snapshot";
+    variables._fw1_version = "3.5.0";
+    variables._cfmljure_version = "1.0.0";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -96,6 +96,7 @@ component {
             // turn the classpath into a URL list:
             var classpathParts = listToArray( classpath, javaLangSystem.getProperty( "path.separator" ) );
             var urls = [ ];
+            var cfmlInteropAvailable = false;
             for ( var part in classpathParts ) {
                 if ( !fileExists( part ) && !directoryExists( part ) ) {
                     try {
@@ -106,6 +107,9 @@ component {
                 }
                 if ( !part.endsWith( ".jar" ) && !part.endsWith( fs ) ) {
                     part &= fs;
+                }
+                if ( REFind( "cfml-interop-[-.0-9a-zA-Z_]+\.jar", part ) ) {
+                    cfmlInteropAvailable = true;
                 }
                 // TODO: shortcut this...
                 var file = createObject( "java", "java.io.File" ).init( part );
@@ -126,18 +130,38 @@ component {
                 this._clj_var  = clj6.getMethod( "var", __classes( "Object", 2 ) );
                 this._clj_read = clj6.getMethod( "read", __classes( "String" ) );
             } catch ( any e ) {
-                var clj5 = appCL.loadClass( "clojure.lang.RT" );
-                variables.out.println( "Falling back to Clojure 1.5 or earlier" );
-                this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
-                this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
+                try {
+                    var clj5 = appCL.loadClass( "clojure.lang.RT" );
+                    variables.out.println( "Falling back to Clojure 1.5 or earlier" );
+                    this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
+                    this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
+                } catch ( any e ) {
+                    variables.out.println( "Unable to load any version of Clojure" );
+                    variables.out.println( "Aborting install of Clojure integration!" );
+                    // promote the only part of the API that will work
+                    this.isAvailable = this.__isAvailable;
+                    return this;
+                }
             }
             // promote API:
             this.install = this.__install;
+            this.isAvailable = this.__isAvailable;
             this.read = this.__read;
-            this.toCFML = this.__toCFML;
-            this.toClojure = this.__toClojure;
-            // auto-load clojure.core and clojure.walk for clients
-            __install( "clojure.core, clojure.walk", this );
+            var autoLoaded = "clojure.core";
+            if ( cfmlInteropAvailable ) {
+                variables.out.println( "Detected cfml-interop for interop" );
+                // perform the best interop we can:
+                autoLoaded = listAppend( autoLoaded, "cfml.interop" );
+                this.toCFML = this.__toCljStruct;
+                this.toClojure = this.__toCljStruct;
+            } else {
+                variables.out.println( "Falling back to clojure.walk for interop" );
+                // fall back to basic interop:
+                autoLoaded = listAppend( autoLoaded, "clojure.walk" );
+                this.toCFML = this.__toCFML;
+                this.toClojure = this.__toClojure;
+            }
+            __install( autoLoaded, this );
         } else if ( ns != "" ) {
             variables._clj_root = root;
             variables._clj_ns = ns;
@@ -182,19 +206,35 @@ component {
         }
     }
 
+    public boolean function __isAvailable() {
+        return structKeyExists( this, "_clj_var" ) ||
+            structKeyExists( variables, "_clj_root" ) &&
+            structKeyExists( variables._clj_root, "_clj_var" );
+    }
+
     public any function __read( string expr ) {
         var args = [ expr ];
         return variables._clj_root._clj_read.invoke( javaCast( "null", 0 ), args.toArray() );
     }
 
     public any function __toCFML( any expr ) {
-        return this.clojure.walk.stringify_keys( expr );
+        return this.clojure.walk.stringify_keys(
+            isNull( expr ) ? javaCast( "null", 0 ) : expr
+        );
+    }
+
+    public any function __toCljStruct( any expr ) {
+        return this.cfml.interop.to_clj_struct(
+            isNull( expr ) ? javaCast( "null", 0 ) : expr
+        );
     }
 
     public any function __toClojure( any expr ) {
         return this.clojure.walk.keywordize_keys(
-            isStruct( expr ) ?
-                this.clojure.core.into( this.clojure.core.hash_map(), expr ) : expr
+            isNull( expr ) ? javaCast( "null", 0 ) :
+                ( isStruct( expr ) ?
+                  this.clojure.core.into( this.clojure.core.hash_map(), expr ) :
+                  expr )
         );
     }
 

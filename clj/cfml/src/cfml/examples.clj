@@ -2,6 +2,8 @@
 ;; provides a number of example Clojure functions
 (ns cfml.examples)
 
+(defn foobar [] "BAR")
+
 (def x '(1 2 3 4))
 
 ;; takes a string, returns a string

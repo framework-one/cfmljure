@@ -22,6 +22,7 @@ component {
     public any function init( string project = "", numeric timeout = 300,
                               string lein = "lein", // to allow default to be overridden
                               string boot = "", // to allow Boot to be selected instead
+                              string clojure = "", // to allow clojure to be selected instead
                               string ns = "", any root = 0 ) {
         variables.refCache = { };
         var javaLangSystem = createObject( "java", "java.lang.System" );
@@ -37,7 +38,10 @@ component {
             var tmpDir = "";
             var buildType = "";
             var buildCommand = "";
-            if ( len( boot ) ) {
+            if ( len( clojure ) ) {
+                buildType = "clojure";
+                buildCommand = clojure;
+            } else if ( len( boot ) ) {
                 // select Boot build tool
                 buildType = "boot";
                 buildCommand = boot & " aot show -C";
@@ -141,13 +145,13 @@ component {
             }
             try {
                 var clj6 = appCL.loadClass( "clojure.java.api.Clojure" );
-                variables.out.println( "Detected Clojure 1.6 or later" );
+                variables.out.println( "Detected Clojure 1.6 or later (API)" );
                 this._clj_var  = clj6.getMethod( "var", __classes( "Object", 2 ) );
                 this._clj_read = clj6.getMethod( "read", __classes( "String" ) );
             } catch ( any e ) {
                 try {
                     var clj5 = appCL.loadClass( "clojure.lang.RT" );
-                    variables.out.println( "Falling back to Clojure 1.5 or earlier" );
+                    variables.out.println( "Falling back to Clojure 1.5 or earlier (RT)" );
                     this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
                     this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
                 } catch ( any e ) {
@@ -344,34 +348,73 @@ component {
             break;
         case 10:
             return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                                            argsArray[4], argsArray[5], argsArray[6],
-                                            argsArray[7], argsArray[8], argsArray[9],
-                                            argsArray[10] );
+                            argsArray[4], argsArray[5], argsArray[6],
+                            argsArray[7], argsArray[8], argsArray[9],
+                            argsArray[10] );
             break;
         case 11:
             return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                                            argsArray[4], argsArray[5], argsArray[6],
-                                            argsArray[7], argsArray[8], argsArray[9],
-                                            argsArray[10], argsArray[11] );
+                            argsArray[4], argsArray[5], argsArray[6],
+                            argsArray[7], argsArray[8], argsArray[9],
+                            argsArray[10], argsArray[11] );
             break;
         case 12:
             return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                                            argsArray[4], argsArray[5], argsArray[6],
-                                            argsArray[7], argsArray[8], argsArray[9],
-                                            argsArray[10], argsArray[11], argsArray[12] );
+                            argsArray[4], argsArray[5], argsArray[6],
+                            argsArray[7], argsArray[8], argsArray[9],
+                            argsArray[10], argsArray[11], argsArray[12] );
             break;
-		case 13:
-			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
-											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
-                                            argsArray[11], argsArray[12], argsArray[13] );
-		case 14:
-			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
-											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
-                                            argsArray[11], argsArray[12], argsArray[13], argsArray[14] );
-		case 15:
-			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
-											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
-                                            argsArray[11], argsArray[12], argsArray[13], argsArray[14], argsArray[15] );
+    		case 13:
+    			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+    											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
+                          argsArray[11], argsArray[12], argsArray[13] );
+    		case 14:
+    			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+    											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
+                          argsArray[11], argsArray[12], argsArray[13], argsArray[14] );
+    		case 15:
+    			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+    											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
+                          argsArray[11], argsArray[12], argsArray[13], argsArray[14], argsArray[15] );
+        case 16:
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                            argsArray[4], argsArray[5], argsArray[6],
+                            argsArray[7], argsArray[8], argsArray[9],
+                            argsArray[10], argsArray[11], argsArray[12],
+                            argsArray[13], argsArray[14], argsArray[15],
+                            argsArray[16] );
+            break;
+        case 17:
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                            argsArray[4], argsArray[5], argsArray[6],
+                            argsArray[7], argsArray[8], argsArray[9],
+                            argsArray[10], argsArray[11], argsArray[12],
+                            argsArray[13], argsArray[14], argsArray[15],
+                            argsArray[16], argsArray[17] );
+            break;
+    		case 18:
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                            argsArray[4], argsArray[5], argsArray[6],
+                            argsArray[7], argsArray[8], argsArray[9],
+                            argsArray[10], argsArray[11], argsArray[12],
+                            argsArray[13], argsArray[14], argsArray[15],
+                            argsArray[16], argsArray[17], argsArray[18] );
+    		case 19:
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                            argsArray[4], argsArray[5], argsArray[6],
+                            argsArray[7], argsArray[8], argsArray[9],
+                            argsArray[10], argsArray[11], argsArray[12],
+                            argsArray[13], argsArray[14], argsArray[15],
+                            argsArray[16], argsArray[17], argsArray[18],
+                            argsArray[19] );
+    		case 20:
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
+                            argsArray[4], argsArray[5], argsArray[6],
+                            argsArray[7], argsArray[8], argsArray[9],
+                            argsArray[10], argsArray[11], argsArray[12],
+                            argsArray[13], argsArray[14], argsArray[15],
+                            argsArray[16], argsArray[17], argsArray[18],
+                            argsArray[19], argsArray[20] );
         default:
             throw "cfmljure cannot call that method with that many arguments.";
             break;
@@ -384,7 +427,16 @@ component {
 
     public void function __require( string ns ) {
         if ( !structKeyExists( variables, "_clj_require" ) ) {
-            variables._clj_require = __var( "clojure.core", "require" );
+            // use Clojure 1.10's serialized-require if available
+            var resolve = __var( "clojure.core", "resolve" );
+            var require = resolve.invoke( this.read( "clojure.core/serialized-require" ) );
+            if ( isNull( require ) ) {
+                variables.out.println( "Falling back to Clojure 1.9 or earlier (require)" );
+                require = resolve.invoke( this.read( "clojure.core/require" ) );
+            } else {
+                variables.out.println( "Detected Clojure 1.10 or later (serialized-require)" );
+            }
+            variables._clj_require = require;
         }
         variables._clj_require.invoke( this.read( ns ) );
     }

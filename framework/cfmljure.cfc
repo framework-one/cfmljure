@@ -2,7 +2,7 @@ component {
     variables._fw1_version      = "4.1.0-SNAPSHOT";
     variables._cfmljure_version = "1.2.0-SNAPSHOT";
 /*
-	Copyright (c) 2012-2016, Sean Corfield
+	Copyright (c) 2012-2021, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ component {
         variables.refCache = { };
         var javaLangSystem = createObject( "java", "java.lang.System" );
         variables.out = javaLangSystem.out;
+        var debug = javaLangSystem.getenv( "DEBUG_CFMLJURE" );
+        variables.debug = isNull( debug ) ? false : ( debug == "true" );
         if ( project != "" ) {
             variables._clj_root = this;
             variables._clj_ns = "";
@@ -83,6 +85,7 @@ component {
             var errors = "";
             __acquireLock( variables.__lockFilePath );
             try {
+                if ( variables.debug ) variables.out.println( "cmd: #buildCommand#" );
                 cfexecute(
                     name="#cmd.run#", arguments="#cmd.arg#",
                     variable="classpath", errorVariable="errors",
@@ -110,6 +113,7 @@ component {
             classpath = replace( classpath, nl, "" );
             // turn the classpath into a URL list:
             var classpathParts = listToArray( classpath, javaLangSystem.getProperty( "path.separator" ) );
+            if ( variables.debug ) arraySort( classpathParts, "text" );
             var urls = [ ];
             var cfmlInteropAvailable = false;
             for ( var part in classpathParts ) {
@@ -127,6 +131,7 @@ component {
                     cfmlInteropAvailable = true;
                 }
                 // TODO: shortcut this...
+                if ( variables.debug ) variables.out.println( "cp: #part#" );
                 var file = createObject( "java", "java.io.File" ).init( part );
                 arrayAppend( urls, file.toURI().toURL() );
             }
@@ -180,6 +185,7 @@ component {
                 this.toClojure = this.__toClojure;
             }
             __install( autoLoaded, this );
+            __install_proxy();
         } else if ( ns != "" ) {
             variables._clj_root = root;
             variables._clj_ns = ns;
@@ -218,9 +224,12 @@ component {
             __acquireLock( variables.__lockFilePath );
             for ( var ns in nsList ) {
                 try {
+                    if ( variables.debug ) variables.out.println( "About to install #trim( ns )#..." );
                     __1_install( trim( ns ), target );
                 } catch ( any e ) {
                     variables.out.println( "Unable to install #trim( ns )# due to #e.message#... rethrowing..." );
+                    var javaLangSystem = createObject( "java", "java.lang.System" );
+                    javaLangSystem.exit( 1 );
                     rethrow;
                 }
             }
@@ -306,123 +315,36 @@ component {
     }
 
     public any function __call( any v, any argsArray ) {
-        switch ( arrayLen( argsArray ) ) {
-        case 0:
-            return v.invoke();
-            break;
-        case 1:
-            return v.invoke( argsArray[1] );
-            break;
-        case 2:
-            return v.invoke( argsArray[1], argsArray[2] );
-            break;
-        case 3:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3] );
-            break;
-        case 4:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                                            argsArray[4] );
-            break;
-        case 5:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                                            argsArray[4], argsArray[5] );
-            break;
-        case 6:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                                            argsArray[4], argsArray[5], argsArray[6] );
-            break;
-        case 7:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                                            argsArray[4], argsArray[5], argsArray[6],
-                                            argsArray[7] );
-            break;
-        case 8:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                                            argsArray[4], argsArray[5], argsArray[6],
-                                            argsArray[7], argsArray[8] );
-            break;
-        case 9:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                                            argsArray[4], argsArray[5], argsArray[6],
-                                            argsArray[7], argsArray[8], argsArray[9] );
-            break;
-        case 10:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                            argsArray[4], argsArray[5], argsArray[6],
-                            argsArray[7], argsArray[8], argsArray[9],
-                            argsArray[10] );
-            break;
-        case 11:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                            argsArray[4], argsArray[5], argsArray[6],
-                            argsArray[7], argsArray[8], argsArray[9],
-                            argsArray[10], argsArray[11] );
-            break;
-        case 12:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                            argsArray[4], argsArray[5], argsArray[6],
-                            argsArray[7], argsArray[8], argsArray[9],
-                            argsArray[10], argsArray[11], argsArray[12] );
-            break;
-    		case 13:
-    			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
-    											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
-                          argsArray[11], argsArray[12], argsArray[13] );
-    		case 14:
-    			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
-    											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
-                          argsArray[11], argsArray[12], argsArray[13], argsArray[14] );
-    		case 15:
-    			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
-    											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
-                          argsArray[11], argsArray[12], argsArray[13], argsArray[14], argsArray[15] );
-        case 16:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                            argsArray[4], argsArray[5], argsArray[6],
-                            argsArray[7], argsArray[8], argsArray[9],
-                            argsArray[10], argsArray[11], argsArray[12],
-                            argsArray[13], argsArray[14], argsArray[15],
-                            argsArray[16] );
-            break;
-        case 17:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                            argsArray[4], argsArray[5], argsArray[6],
-                            argsArray[7], argsArray[8], argsArray[9],
-                            argsArray[10], argsArray[11], argsArray[12],
-                            argsArray[13], argsArray[14], argsArray[15],
-                            argsArray[16], argsArray[17] );
-            break;
-    		case 18:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                            argsArray[4], argsArray[5], argsArray[6],
-                            argsArray[7], argsArray[8], argsArray[9],
-                            argsArray[10], argsArray[11], argsArray[12],
-                            argsArray[13], argsArray[14], argsArray[15],
-                            argsArray[16], argsArray[17], argsArray[18] );
-    		case 19:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                            argsArray[4], argsArray[5], argsArray[6],
-                            argsArray[7], argsArray[8], argsArray[9],
-                            argsArray[10], argsArray[11], argsArray[12],
-                            argsArray[13], argsArray[14], argsArray[15],
-                            argsArray[16], argsArray[17], argsArray[18],
-                            argsArray[19] );
-    		case 20:
-            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
-                            argsArray[4], argsArray[5], argsArray[6],
-                            argsArray[7], argsArray[8], argsArray[9],
-                            argsArray[10], argsArray[11], argsArray[12],
-                            argsArray[13], argsArray[14], argsArray[15],
-                            argsArray[16], argsArray[17], argsArray[18],
-                            argsArray[19], argsArray[20] );
-        default:
-            throw "cfmljure cannot call that method with that many arguments.";
-            break;
+        var args = [];
+        for ( var ix in argsArray ) {
+          args[ ix ] = argsArray[ ix ];
+        }
+        try {
+          return variables._clj_root.__cfml_proxy.invoke( v, args );
+        } catch ( any _ ) {
+          throw "invocation failed for: #variables._clj_root.clojure.core.str( v )#";
         }
     }
 
     public string function __name() {
         return variables._clj_ns;
+    }
+
+    public void function __install_proxy() {
+      var eval = __var( "clojure.core", "eval" );
+      eval.invoke( this.read(
+        // this ends up in clojure.core:
+        "(defn cfml-invoke [v args]
+          (try
+            (apply v args)
+            (catch Throwable t
+              (println (ex-info (name :invocation-failed)
+                                {:fn v :args (seq args)}
+                                t))
+              (throw t))))"
+
+      ) );
+      variables._clj_root.__cfml_proxy = __var( "clojure.core", "cfml-invoke" );
     }
 
     public void function __require( string ns ) {
@@ -453,6 +375,39 @@ component {
     }
 
     public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
+        if ( variables.debug ) {
+          var args = "";
+          for ( var a in missingMethodArguments ) {
+            if ( isNull( missingMethodArguments[a] ) ) {
+              args &= ", nil";
+            } else if ( isSimpleValue( missingMethodArguments[a] ) ) {
+              args &= ", " & missingMethodArguments[a];
+            } else {
+              var arg = "*";
+              try {
+                var name = __var( "clojure.core", "name" );
+                var namespace = __var( "clojure.core", "namespace" );
+                var is_kw = __var( "clojure.core", "keyword?" );
+                var is_sym = __var( "clojure.core", "symbol?" );
+                var add_name = "";
+                if ( is_kw.invoke( missingMethodArguments[a] ) ) {
+                  add_name = ":";
+                }
+                if ( is_sym.invoke( missingMethodArguments[a] ) ) {
+                  add_name = "'";
+                }
+                if ( len( add_name ) ) {
+                  arg = add_name;
+                  var ns = namespace.invoke( missingMethodArguments[a] );
+                  if ( !isNull( ns ) ) arg &= ns & "/";
+                  arg &= name.invoke( missingMethodArguments[a] );
+                }
+              } catch ( any ) { }
+              args &= ", " & arg;
+            }
+          }
+          variables.out.println( "Calling: #variables._clj_ns#/#missingMethodName# #args#" );
+        }
         if ( left( missingMethodName, 1 ) == "_" ) {
             return __( right( missingMethodName, len( missingMethodName ) - 1 ), true );
         } else {

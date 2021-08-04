@@ -46,10 +46,19 @@ component extends=framework.ioc {
         if ( structKeyExists( config, "noClojure" ) && config.noClojure ) return;
         var lein = structKeyExists( config, "lein" ) ? config.lein : "lein";
         var boot = structKeyExists( config, "boot" ) ? config.boot : ""; // default is not Boot
+        var clojure = structKeyExists( config, "clojure" ) ? config.clojure : ""; // default is not clojure either
         var cljcontroller = structKeyExists( config, "cljcontroller" ) ? config.cljcontroller : "framework.cljcontroller";
         // find the first folder that includes project.clj (or build.boot) - that's our project
-        variables.project = findProjectFile( len( boot ) ? "build.boot" : "project.clj" );
-        discoverClojureFiles();
+        variables.project = findProjectFile(
+            len( clojure ) ? "deps.edn" :
+            len( boot ) ? "build.boot" :
+            "project.clj"
+        );
+        if ( structKeyExists( config, "discoverclj" ) && !config.discoverclj ) {
+            if ( variables.debug ) variables.stdout.println( "ioclj: skipping Clojure discovery..." );
+        } else {
+            discoverClojureFiles();
+        }
         // list of namespaces to expose:
         var ns = [ ];
         for ( var beanName in variables.cljBeans ) {
@@ -61,11 +70,11 @@ component extends=framework.ioc {
         var cfmljure = 0;
         if ( useServerScope ) {
             if ( !structKeyExists( server, "__cfmljure" ) ) {
-                server.__cfmljure = new framework.cfmljure( variables.project, timeout, lein, boot );
+                server.__cfmljure = new framework.cfmljure( variables.project, timeout, lein, boot, clojure );
             }
             cfmljure = server.__cfmljure;
         } else {
-            cfmljure = new framework.cfmljure( variables.project, timeout, lein, boot );
+            cfmljure = new framework.cfmljure( variables.project, timeout, lein, boot, clojure );
         }
         if ( cfmljure.isAvailable() ) {
             // Clojure loaded -- install the discovered namespaces

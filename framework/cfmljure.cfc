@@ -133,21 +133,24 @@ component {
                 // TODO: shortcut this...
                 if ( variables.debug ) variables.out.println( "cp: #part#" );
                 var file = createObject( "java", "java.io.File" ).init( part );
-                arrayAppend( urls, file.toURI().toURL() );
-            }
-            // extend the classloader - not at all sketchy, honest!
-            var threadProxy = createObject( "java", "java.lang.Thread" );
-            var appCL = threadProxy.currentThread().getContextClassLoader();
-            var urlCLProxy = createObject( "java", "java.net.URLClassLoader" );
-            var addURL = urlCLProxy.getClass().getDeclaredMethod( "addURL", __classes( "URL", 1, "java.net" ) );
-            addUrl.setAccessible( true ); // hack to make it callable
-            for ( var newURL in urls.toArray() ) {
-                if ( find( "servlet-api", newURL ) ) {
-                    variables.out.println( "Refusing to load #newURL# because it may conflict with CFML's context!" );
+                var asURL = file.toURI().toURL();
+                if ( find( "servlet-api", asURL.toString() ) ) {
+                    variables.out.println( "Refusing to load #asURL# because it may conflict with CFML's context!" );
                 } else {
-                    addURL.invoke( appCL, [ newURL ] );
+                    arrayAppend( urls, asURL );
                 }
             }
+            var clazz = createObject( "java", "java.lang.Class" );
+            var arrayType = createObject( "java", "java.lang.reflect.Array" );
+            var arrayInstance = arrayType.newInstance( clazz.forName("java.net.URL"), urls.size() );
+            // replace the classloader with all the necessary URLs added:
+            var threadProxy = createObject( "java", "java.lang.Thread" );
+            var appCL = threadProxy.currentThread().getContextClassLoader();
+            appCL = createObject( "java", "java.net.URLClassLoader" ).init(
+                urls.toArray( arrayInstance ),
+                appCL.getParent()
+            );
+            threadProxy.currentThread().setContextClassLoader( appCL );
             try {
                 var clj6 = appCL.loadClass( "clojure.java.api.Clojure" );
                 variables.out.println( "Detected Clojure 1.6 or later (API)" );
@@ -285,11 +288,12 @@ component {
 
     public any function __classes( string name, numeric n = 1, string prefix = "java.lang" ) {
         var result = createObject( "java", "java.util.ArrayList" ).init();
-        var type = createObject( "java", prefix & "." & name ).getClass();
+        var clazz = createObject( "java", "java.lang.Class" );
+        var type = clazz.forName( prefix & "." & name );
         while ( n-- > 0 ) result.add( type );
         var classType = createObject( "java", "java.lang.Class" );
         var arrayType = createObject( "java", "java.lang.reflect.Array" );
-        var arrayInstance = arrayType.newInstance( classType.getClass(), result.size() );
+        var arrayInstance = arrayType.newInstance( clazz.forName("java.lang.Class"), result.size() );
         return result.toArray( arrayInstance );
     }
 
@@ -376,10 +380,10 @@ component {
     }
 
     public any function __var( string ns, string name ) {
-        name = __clj_name( name );
-        var args = [ lCase( ns ), name ];
-        return variables._clj_root._clj_var.invoke( javaCast( "null", 0 ), args.toArray() );
-    }
+      name = __clj_name( name );
+      var args = [ lCase( ns ), name ];
+      return variables._clj_root._clj_var.invoke( javaCast( "null", 0 ), args.toArray() );
+  }
 
     public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
         if ( variables.debug ) {

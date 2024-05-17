@@ -148,7 +148,7 @@ component {
             var appCL = threadProxy.currentThread().getContextClassLoader();
             appCL = createObject( "java", "java.net.URLClassLoader" ).init(
                 urls.toArray( arrayInstance ),
-                appCL.getParent()
+                appCL
             );
             threadProxy.currentThread().setContextClassLoader( appCL );
             try {

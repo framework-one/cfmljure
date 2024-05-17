@@ -2,7 +2,7 @@ component {
     variables._fw1_version      = "4.1.0-SNAPSHOT";
     variables._cfmljure_version = "1.2.0-SNAPSHOT";
 /*
-	Copyright (c) 2012-2021, Sean Corfield
+	Copyright (c) 2012-2024, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -348,13 +348,15 @@ component {
     }
 
     public void function __require( string ns ) {
+        if ( !structKeyExists( variables, "_clj_resolve" ) ) {
+            this._clj_resolve = __var( "clojure.core", "resolve" );
+        }
         if ( !structKeyExists( variables, "_clj_require" ) ) {
             // use Clojure 1.10's serialized-require if available
-            var resolve = __var( "clojure.core", "resolve" );
-            var require = resolve.invoke( this.read( "clojure.core/serialized-require" ) );
+            var require = this._clj_resolve.invoke( this.read( "clojure.core/serialized-require" ) );
             if ( isNull( require ) ) {
                 variables.out.println( "Falling back to Clojure 1.9 or earlier (require)" );
-                require = resolve.invoke( this.read( "clojure.core/require" ) );
+                require = this._clj_resolve.invoke( this.read( "clojure.core/require" ) );
             } else {
                 variables.out.println( "Detected Clojure 1.10 or later (serialized-require)" );
             }
@@ -363,14 +365,19 @@ component {
         variables._clj_require.invoke( this.read( ns ) );
     }
 
-    public any function __var( string ns, string name ) {
+    public any function __clj_name( string name ) {
         var encodes = [ "_qmark_", "_bang_", "_gt_", "_lt_", "_eq_", "_star_", "_" ];
         var decodes = [ "?",       "!",      ">",    "<",    "=",    "*",      "-" ];
         var n = encodes.len();
         for ( var i = 1; i <= n; ++i ) {
             name = replaceNoCase( name, encodes[i], decodes[i], "all" );
         }
-        var args = [ lCase( ns ), lCase( name ) ];
+        return lCase( name );
+    }
+
+    public any function __var( string ns, string name ) {
+        name = __clj_name( name );
+        var args = [ lCase( ns ), name ];
         return variables._clj_root._clj_var.invoke( javaCast( "null", 0 ), args.toArray() );
     }
 
@@ -408,7 +415,15 @@ component {
           }
           variables.out.println( "Calling: #variables._clj_ns#/#missingMethodName# #args#" );
         }
+        var var_reference = false;
         if ( left( missingMethodName, 1 ) == "_" ) {
+            // watch out for names that begin with something that maps to _
+            var poss_clj_var = variables._clj_root._clj_resolve.invoke(
+                this.__read( variables._clj_ns & "/" & __clj_name( missingMethodName ) )
+            );
+            var_reference = isNull( poss_clj_var );
+        }
+        if ( var_reference ) {
             return __( right( missingMethodName, len( missingMethodName ) - 1 ), true );
         } else {
             var clj_var = __( missingMethodName, false );
